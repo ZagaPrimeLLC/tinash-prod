@@ -34,9 +34,9 @@ export default function HowItWorks() {
   return (
     <div ref={ref} className="relative mx-auto max-w-3xl">
       {/* progress line */}
-      <div className="absolute left-6 top-2 bottom-2 w-px bg-pine-100 sm:left-7">
+      <div className="absolute left-6 top-2 bottom-2 w-px bg-plum-100 sm:left-7">
         <motion.div
-          className="w-px bg-gold-500"
+          className="w-px bg-teal-500"
           style={{ height: reduce ? "100%" : lineH }}
         />
       </div>
@@ -51,16 +51,16 @@ export default function HowItWorks() {
             className="relative flex gap-6 pl-0"
           >
             <span className="glass z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full shadow-md sm:h-14 sm:w-14">
-              <Icon className="h-6 w-6 text-pine-600" aria-hidden />
+              <Icon className="h-6 w-6 text-plum-600" aria-hidden />
             </span>
             <div>
-              <p className="text-sm font-semibold uppercase tracking-wider text-gold-500">
+              <p className="text-sm font-semibold uppercase tracking-wider text-teal-700">
                 Step {i + 1}
               </p>
-              <h3 className="mt-1 font-display text-2xl font-semibold text-pine-950">
+              <h3 className="mt-1 font-display text-2xl font-semibold text-plum-950">
                 {title}
               </h3>
-              <p className="mt-2 leading-7 text-pine-800/80">{body}</p>
+              <p className="mt-2 leading-7 text-plum-800/80">{body}</p>
             </div>
           </motion.li>
         ))}

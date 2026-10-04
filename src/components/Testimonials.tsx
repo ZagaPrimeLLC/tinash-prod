@@ -50,15 +50,15 @@ export default function Testimonials() {
           {testimonials.map((t) => (
             <motion.figure
               key={t.name}
-              className="glass min-w-0 flex-[0_0_88%] rounded-3xl p-8 shadow-lg shadow-pine-950/5 sm:flex-[0_0_46%] lg:flex-[0_0_31%]"
+              className="glass min-w-0 flex-[0_0_88%] rounded-3xl p-8 shadow-lg shadow-plum-950/5 sm:flex-[0_0_46%] lg:flex-[0_0_31%]"
               whileHover={reduce ? undefined : { y: -4 }}
             >
-              <Quote className="h-8 w-8 text-gold-500" aria-hidden />
-              <blockquote className="mt-4 leading-7 text-pine-900">
+              <Quote className="h-8 w-8 text-teal-600" aria-hidden />
+              <blockquote className="mt-4 leading-7 text-plum-900">
                 “{t.quote}”
               </blockquote>
-              <figcaption className="mt-5 text-sm font-semibold text-pine-700">
-                {t.name} <span className="font-normal text-pine-500">· {t.where}</span>
+              <figcaption className="mt-5 text-sm font-semibold text-plum-700">
+                {t.name} <span className="font-normal text-plum-500">· {t.where}</span>
               </figcaption>
             </motion.figure>
           ))}
@@ -68,19 +68,19 @@ export default function Testimonials() {
         <button
           onClick={prev}
           aria-label="Previous testimonial"
-          className="rounded-full border border-pine-200 bg-white p-2.5 text-pine-700 transition-colors hover:border-gold-400"
+          className="rounded-full border border-plum-200 bg-white p-2.5 text-plum-700 transition-colors hover:border-teal-400"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
         <button
           onClick={next}
           aria-label="Next testimonial"
-          className="rounded-full border border-pine-200 bg-white p-2.5 text-pine-700 transition-colors hover:border-gold-400"
+          className="rounded-full border border-plum-200 bg-white p-2.5 text-plum-700 transition-colors hover:border-teal-400"
         >
           <ChevronRight className="h-5 w-5" />
         </button>
       </div>
-      <p className="mt-4 text-center text-xs text-pine-500">
+      <p className="mt-4 text-center text-xs text-plum-500">
         Sample testimonials shown for illustration until client reviews are
         published.
       </p>

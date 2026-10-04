@@ -1,24 +1,28 @@
 @import "tailwindcss";
 
 @theme {
-  --color-pine-50: #f2f7f5;
-  --color-pine-100: #dcebe5;
-  --color-pine-200: #b8d6cb;
-  --color-pine-300: #8bbaa9;
-  --color-pine-400: #5c9a85;
-  --color-pine-500: #3d7d69;
-  --color-pine-600: #2c6354;
-  --color-pine-700: #214f44;
-  --color-pine-800: #183f37;
-  --color-pine-900: #0e2f29;
-  --color-pine-950: #081f1b;
-  --color-cream-50: #fdfbf7;
-  --color-cream-100: #f8f3ea;
-  --color-cream-200: #f1e7d6;
-  --color-gold-300: #e3cf9e;
-  --color-gold-400: #d4b878;
-  --color-gold-500: #c9a962;
-  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+  /* Brand purple — logo "Homecare Services" is plum-600 (#583092) */
+  --color-plum-50: #f6f3fb;
+  --color-plum-100: #ece5f6;
+  --color-plum-200: #d9cbed;
+  --color-plum-300: #bba3de;
+  --color-plum-400: #9474c8;
+  --color-plum-500: #7550b0;
+  --color-plum-600: #583092;
+  --color-plum-700: #4a2880;
+  --color-plum-800: #3b2068;
+  --color-plum-900: #2c1850;
+  --color-plum-950: #1c0f36;
+  /* Brand teal — logo "inash" is teal-500 (#29beb9); use 700 for text on light */
+  --color-teal-300: #7ddbd6;
+  --color-teal-400: #4fcdc8;
+  --color-teal-500: #29beb9;
+  --color-teal-600: #1c9a96;
+  --color-teal-700: #127572;
+  --color-mist-50: #fafbfd;
+  --color-mist-100: #f1f5f8;
+  --color-mist-200: #e2e9ef;
+  --font-display: var(--font-montserrat), ui-sans-serif, system-ui, sans-serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -27,15 +31,41 @@ html {
 }
 
 body {
-  background: var(--color-cream-50);
-  color: var(--color-pine-950);
+  background: var(--color-mist-50);
+  color: var(--color-plum-950);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
 ::selection {
-  background: var(--color-gold-300);
-  color: var(--color-pine-950);
+  background: var(--color-teal-300);
+  color: var(--color-plum-950);
+}
+
+/* Brand surface — lighter purple with a teal glow; replaces near-black panels */
+.bg-brand {
+  background:
+    radial-gradient(circle at 85% 10%, rgb(41 190 185 / 0.3), transparent 45%),
+    radial-gradient(circle at 5% 95%, rgb(41 190 185 / 0.14), transparent 40%),
+    linear-gradient(135deg, #6a3fa8 0%, #583092 45%, #4a2880 100%);
+}
+
+/* Section eyebrow with a leading dash */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+.eyebrow::before {
+  content: "";
+  width: 1.75rem;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--color-teal-500);
 }
 
 /* Glass surfaces */
@@ -46,7 +76,7 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
 .glass-dark {
-  background: rgba(8, 31, 27, 0.45);
+  background: rgba(59, 32, 104, 0.42);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255, 255, 255, 0.18);
@@ -102,7 +132,29 @@ body {
 
 /* Focus visibility (WCAG) */
 :focus-visible {
-  outline: 3px solid var(--color-gold-500);
+  outline: 3px solid var(--color-teal-500);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* Chat launcher: a slow heartbeat with a teal glow that breathes with it. */
+@keyframes tinash-heartbeat {
+  0%   { transform: scale(1);    box-shadow: 0 0 0 0 rgb(41 190 185 / 0.55), 0 8px 24px rgb(28 15 54 / 0.3); }
+  12%  { transform: scale(1.1);  box-shadow: 0 0 22px 8px rgb(41 190 185 / 0.45), 0 8px 24px rgb(28 15 54 / 0.3); }
+  24%  { transform: scale(1);    box-shadow: 0 0 14px 4px rgb(41 190 185 / 0.35), 0 8px 24px rgb(28 15 54 / 0.3); }
+  36%  { transform: scale(1.07); box-shadow: 0 0 26px 10px rgb(41 190 185 / 0.4), 0 8px 24px rgb(28 15 54 / 0.3); }
+  50%  { transform: scale(1);    box-shadow: 0 0 12px 3px rgb(41 190 185 / 0.28), 0 8px 24px rgb(28 15 54 / 0.3); }
+  100% { transform: scale(1);    box-shadow: 0 0 0 0 rgb(41 190 185 / 0), 0 8px 24px rgb(28 15 54 / 0.3); }
+}
+@keyframes tinash-halo {
+  0%   { transform: scale(0.85); opacity: 0.55; }
+  70%  { transform: scale(1.5); opacity: 0; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+.tinash-chat-fab { animation: tinash-heartbeat 3.2s ease-in-out infinite; }
+.tinash-chat-halo { animation: tinash-halo 3.2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .tinash-chat-fab,
+  .tinash-chat-halo { animation: none; }
+  .tinash-chat-halo { opacity: 0; }
 }

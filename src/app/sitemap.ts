@@ -1,11 +1,17 @@
 import type { MetadataRoute } from "next";
 import { services } from "@/lib/services";
 import { site } from "@/lib/site";
+import { getOpenJobs } from "@/lib/public-jobs";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+// Private areas (/dashboard, /login, /auth, /welcome, /api) are never listed.
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages = [
     "",
     "/services",
+    "/guide-dementia-care",
+    "/ddd-services",
     "/about",
     "/careers",
     "/consulting",
@@ -29,5 +35,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  return [...staticPages, ...servicePages];
+  const jobPages = (await getOpenJobs()).map((j) => ({
+    url: `${site.url}/careers/${j.slug}`,
+    lastModified: new Date(j.updated_at),
+    changeFrequency: "weekly" as const,
+    priority: 0.8,
+  }));
+
+  return [...staticPages, ...servicePages, ...jobPages];
 }
