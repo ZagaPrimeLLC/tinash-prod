@@ -25,12 +25,14 @@ export default function Header() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
-          className={`font-display text-xl font-semibold tracking-tight ${
-            scrolled ? "text-pine-900" : "text-white"
+          className={`whitespace-nowrap font-display text-lg font-semibold tracking-tight sm:text-xl ${
+            scrolled
+              ? "text-pine-900"
+              : "text-white [text-shadow:0_1px_12px_rgba(8,31,27,0.8)]"
           }`}
           onClick={() => setOpen(false)}
         >
-          Tinash<span className="text-gold-500"> Homecare</span>
+          Tinash<span className="text-gold-400"> Homecare</span>
         </Link>
 
         <nav className="hidden items-center gap-6 lg:flex" aria-label="Main">
@@ -59,9 +61,10 @@ export default function Header() {
           </a>
           <Link
             href="/contact"
-            className="rounded-full bg-gold-500 px-4 py-2 text-sm font-semibold text-pine-950 shadow-md transition-transform hover:scale-105"
+            className="whitespace-nowrap rounded-full bg-gold-500 px-3 py-1.5 text-xs font-semibold text-pine-950 shadow-md transition-transform hover:scale-105 sm:px-4 sm:py-2 sm:text-sm"
           >
-            Free Care Assessment
+            <span className="sm:hidden">Free Assessment</span>
+            <span className="hidden sm:inline">Free Care Assessment</span>
           </Link>
           <button
             className={`lg:hidden ${scrolled ? "text-pine-900" : "text-white"}`}

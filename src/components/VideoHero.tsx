@@ -87,7 +87,7 @@ export default function VideoHero() {
         </motion.p>
         <motion.h1
           variants={item}
-          className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] text-white sm:text-6xl lg:text-7xl"
+          className="max-w-3xl font-display text-5xl font-semibold leading-[1.05] text-white [text-shadow:0_2px_24px_rgba(8,31,27,0.55)] sm:text-6xl lg:text-7xl"
         >
           Care that lets your loved one{" "}
           <span className="text-gold-400">stay home.</span>
