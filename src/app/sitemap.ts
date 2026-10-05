@@ -3,8 +3,7 @@ import { services } from "@/lib/services";
 import { site } from "@/lib/site";
 import { getOpenJobs } from "@/lib/public-jobs";
 
-// Private areas (/dashboard, /login, /auth, /welcome, /api) are never listed.
-export const revalidate = 3600;
+export const dynamic = "force-dynamic";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages = [

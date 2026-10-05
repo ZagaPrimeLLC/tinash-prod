@@ -17,7 +17,8 @@ export const metadata: Metadata = {
 
 // Publishing or closing a job in the CRM refreshes this page straight away;
 // this is only the fallback.
-export const revalidate = 300;
+// Live job data: published or closed jobs show up immediately.
+export const dynamic = "force-dynamic";
 
 const perks = [
   "Flexible schedules — choose cases that fit your life",

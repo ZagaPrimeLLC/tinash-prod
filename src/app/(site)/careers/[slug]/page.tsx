@@ -6,23 +6,20 @@ import {
 } from 'lucide-react';
 import JobApplyForm from '@/components/site/JobApplyForm';
 import { JobDescription } from '@/lib/job-format';
-import { getOpenJob, getOpenJobs } from '@/lib/public-jobs';
+import { getOpenJob } from '@/lib/public-jobs';
 import { EMPLOYMENT_LABEL, WORK_MODE_LABEL, payLabel, postedLabel, type Job } from '@/lib/jobs';
 import { site } from '@/lib/site';
 
 // What every Tinash caregiver can expect (from the careers page copy).
 const whatToExpect = [
-  'Paid training and real supervision',
+  'Training and real supervision',
   'Clients matched to your skills and personality',
   'Flexible schedules that fit your life',
   'A team that answers when you call',
 ];
 
-export const revalidate = 300;
-
-export async function generateStaticParams() {
-  return (await getOpenJobs()).map((j) => ({ slug: j.slug }));
-}
+// Live job data: published or closed jobs show up immediately.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;

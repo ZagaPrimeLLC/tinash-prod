@@ -1,0 +1,92 @@
+name: Deploy
+
+# The ONLY path to production, and deliberately manual:
+#   merge to main  ->  nothing ships
+#   run this workflow from main, typing PROMOTE  ->  production deploys
+# Cloudflare's own "build on push" (Workers Builds) must stay disconnected,
+# otherwise a push deploys straight to production and this gate is decorative.
+# Rollback: Cloudflare dashboard -> worker tinash-prod -> Deployments.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: Type PROMOTE to deploy to production
+        required: true
+        default: ''
+
+concurrency:
+  group: deploy-main
+  cancel-in-progress: false
+
+env:
+  NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  NEXT_PUBLIC_SUPABASE_SCHEMA: ${{ vars.NEXT_PUBLIC_SUPABASE_SCHEMA }}
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      # Guards are steps, not job-level ifs: a skipped job reports as a pass.
+      - name: Refuse to promote anything but main
+        if: github.ref != 'refs/heads/main'
+        run: { echo "::error::production deploys only from main"; exit 1; }
+      - name: Confirm intent
+        if: inputs.confirm != 'PROMOTE'
+        run: { echo "::error::type PROMOTE in the confirm box to deploy"; exit 1; }
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx opennextjs-cloudflare build
+      # Built once and deployed from the artifact: what is built is what ships.
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worker-bundle
+          path: |
+            .open-next
+            wrangler.jsonc
+            package.json
+          retention-days: 7
+          include-hidden-files: true
+
+  production:
+    name: Deploy to production
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://tinashhomecareservices.com
+    steps:
+      - name: Refuse to promote anything but main
+        if: github.ref != 'refs/heads/main'
+        run: { echo "::error::production deploys only from main"; exit 1; }
+      - name: Confirm intent
+        if: inputs.confirm != 'PROMOTE'
+        run: { echo "::error::type PROMOTE in the confirm box to deploy"; exit 1; }
+      - uses: actions/download-artifact@v4
+        with:
+          name: worker-bundle
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+      - name: Verify production
+        run: |
+          site="${{ vars.PRODUCTION_URL }}"; crm="${{ vars.CRM_URL }}"
+          [ -n "$site" ] || { echo "PRODUCTION_URL not set; skipping checks"; exit 0; }
+          fail=0
+          for p in / /services /ddd-services /careers /contact; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$site$p"); echo "$p -> $code"; [ "$code" = 200 ] || fail=1
+          done
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$site/login"); echo "public /login (expect 404) -> $code"; [ "$code" = 404 ] || fail=1
+          if [ -n "$crm" ]; then
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$crm/login"); echo "crm /login -> $code"; [ "$code" = 200 ] || fail=1
+          fi
+          exit $fail

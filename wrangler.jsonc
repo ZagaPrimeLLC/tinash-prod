@@ -1,0 +1,30 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "tinash-prod",
+  // Zaga Prime LLC Cloudflare account (same account as the other ZagaPrime sites).
+  "account_id": "5ab2c947897e922724bfa35b1d6a2b2c",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+  "observability": { "enabled": true },
+
+  // Custom domains are added at DNS cutover, once the zone is on Cloudflare:
+  //   "routes": [
+  //     { "pattern": "tinashhomecareservices.com", "custom_domain": true },
+  //     { "pattern": "www.tinashhomecareservices.com", "custom_domain": true },
+  //     { "pattern": "crm.tinashhomecareservices.com", "custom_domain": true }
+  //   ],
+  // No secrets or vars here: the app only needs public NEXT_PUBLIC_* values,
+  // which Next inlines at build time (GitHub repository variables).
+  "env": {
+    "staging": {
+      "name": "tinash-staging",
+      "main": ".open-next/worker.js",
+      "compatibility_date": "2026-10-01",
+      "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+      "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
+      "observability": { "enabled": true }
+    }
+  }
+}

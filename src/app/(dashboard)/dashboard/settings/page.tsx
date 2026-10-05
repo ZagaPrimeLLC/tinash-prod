@@ -68,7 +68,7 @@ export default async function SettingsPage() {
 
       {isAdmin && (
         <div id="intake" className="scroll-mt-6 px-5 pb-6 sm:px-8">
-          <IntakeKeys keys={(keysRes.data ?? []) as IntakeKey[]} endpoint={`${site.url}/api/intake`} />
+          <IntakeKeys keys={(keysRes.data ?? []) as IntakeKey[]} endpoint={`${site.crmUrl}/api/intake`} />
         </div>
       )}
 

@@ -118,13 +118,6 @@ export default function Footer() {
             NJ DDD supports. Content on this site is informational and is not
             medical advice.
           </p>
-          <Link
-            href="/login"
-            rel="nofollow"
-            className="text-xs text-mist-100/60 transition-colors hover:text-teal-300"
-          >
-            Team login
-          </Link>
         </div>
       </div>
     </footer>

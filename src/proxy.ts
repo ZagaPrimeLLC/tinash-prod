@@ -4,8 +4,57 @@ import { SUPABASE_ANON_KEY, SUPABASE_URL, supabaseConfigured } from '@/lib/supab
 
 type CookieToSet = { name: string; value: string; options?: CookieOptions };
 
-/** Gates /dashboard (Next 16's name for middleware). */
+// The team CRM lives only on its own host (crm.tinashhomecareservices.com).
+// The public site never links to it and behaves as if it does not exist:
+// every CRM path answers 404 there. On the CRM host, public pages bounce back
+// to the main site. Local dev and the staging worker serve both, for testing.
+const PUBLIC_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tinashhomecareservices.com';
+
+const CRM_PREFIXES = ['/dashboard', '/login', '/auth', '/welcome', '/design-preview', '/api/board-search', '/api/intake'];
+// Assets and endpoints the CRM pages themselves need on the CRM host.
+const CRM_HOST_ALLOWED = ['/_next', '/brand', '/media', '/icon', '/apple-icon', '/favicon', '/api/inquiry'];
+
+// "/icon" matches "/icon.png", "/dashboard" matches "/dashboard/jobs", but
+// "/dashboard" does not match "/dashboardx".
+const startsWithAny = (path: string, prefixes: string[]) =>
+  prefixes.some((p) => path === p || path.startsWith(`${p}/`) || path.startsWith(`${p}.`));
+
+type HostKind = 'crm' | 'public' | 'open';
+
+function hostKind(host: string): HostKind {
+  const h = host.toLowerCase();
+  if (h.startsWith('crm.')) return 'crm';
+  if (/^(localhost|127\.0\.0\.1|192\.168\.|\[::1\])/.test(h) || h.includes('-staging.')) return 'open';
+  return 'public';
+}
+
 export async function proxy(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+  const kind = hostKind(request.headers.get('host') ?? '');
+  const isCrmPath = startsWithAny(pathname, CRM_PREFIXES);
+
+  if (kind === 'public' && isCrmPath) {
+    // Render the normal 404 page with a 404 status.
+    return NextResponse.rewrite(new URL('/__not-found', request.url), { status: 404 });
+  }
+
+  if (kind === 'crm') {
+    if (pathname === '/robots.txt') {
+      return new NextResponse('User-agent: *\nDisallow: /\n', { headers: { 'Content-Type': 'text/plain' } });
+    }
+    if (pathname === '/') return NextResponse.redirect(new URL('/dashboard', request.url));
+    if (!isCrmPath && !startsWithAny(pathname, CRM_HOST_ALLOWED)) {
+      return NextResponse.redirect(new URL(pathname + request.nextUrl.search, PUBLIC_ORIGIN), 308);
+    }
+  }
+
+  const response = pathname.startsWith('/dashboard') ? await gateDashboard(request) : NextResponse.next({ request });
+  if (kind === 'crm' || isCrmPath) response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  return response;
+}
+
+/** Signed-out visitors to /dashboard go to /login on the same host. */
+async function gateDashboard(request: NextRequest) {
   const toLogin = () => {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
@@ -34,4 +83,8 @@ export async function proxy(request: NextRequest) {
   return response;
 }
 
-export const config = { matcher: ['/dashboard/:path*'] };
+export const config = {
+  // Everything except build assets and image optimisation, so the host rules
+  // above see every page and API request.
+  matcher: ['/((?!_next/static|_next/image).*)'],
+};

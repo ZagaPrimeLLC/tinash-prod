@@ -1,0 +1,119 @@
+name: CI
+
+# Every pull request: verify, scan for secrets, then deploy to the staging
+# worker so the change is reviewed running before it is merged.
+# Production is never deployed from here -- see deploy.yml.
+on:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+env:
+  # Public by design (inlined into the browser bundle); row-level security is
+  # the lock. Kept as repository variables, not secrets.
+  NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+  NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+  NEXT_PUBLIC_SUPABASE_SCHEMA: ${{ vars.NEXT_PUBLIC_SUPABASE_SCHEMA }}
+
+jobs:
+  verify:
+    name: Typecheck, lint & build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npx eslint src
+      - run: npx opennextjs-cloudflare build
+      - name: Check the worker fits the free plan (3 MiB gzip)
+        run: |
+          npx wrangler deploy --dry-run --outdir /tmp/cf | tee /tmp/size.txt
+          kib=$(grep -oE 'gzip: [0-9.]+' /tmp/size.txt | grep -oE '[0-9.]+' | cut -d. -f1)
+          echo "worker gzip size: ${kib} KiB (free limit 3072)"
+          [ "$kib" -lt 3072 ] || { echo "::error::worker is ${kib} KiB gzip, over the free-plan limit"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: worker-bundle-pr
+          path: |
+            .open-next
+            wrangler.jsonc
+            package.json
+          retention-days: 3
+          include-hidden-files: true
+
+  secret-scan:
+    name: Secret scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Scan diff for credentials
+        run: |
+          base="${{ github.event.pull_request.base.sha }}"
+          head="${{ github.event.pull_request.head.sha }}"
+          git diff "$base" "$head" -- . ':(exclude)package-lock.json' | grep '^+' > /tmp/added.txt || true
+          # Match credential formats, not words ("service_role" appears in SQL grants).
+          fail=0
+          check() { if grep -qE "$2" /tmp/added.txt; then echo "::error::$1 detected in diff"; fail=1; fi; }
+          check "Supabase secret key"            'sb_secret_[A-Za-z0-9_-]{20,}'
+          check "Supabase personal access token" 'sbp_[a-f0-9]{40}'
+          check "Supabase JWT"                   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9\.[A-Za-z0-9_-]{30,}'
+          check "private key"                    'BEGIN [A-Z ]*PRIVATE KEY'
+          check "AWS access key"                 'AKIA[0-9A-Z]{16}'
+          check "Resend API key"                 're_[A-Za-z0-9]{20,}'
+          exit $fail
+      - name: Ensure local secret files are not committed
+        run: |
+          for f in .dev.vars .env .env.local .env.production; do
+            if git ls-files --error-unmatch "$f" >/dev/null 2>&1; then
+              echo "::error::$f is tracked by git and must not be"; exit 1
+            fi
+          done
+
+  deploy-staging:
+    name: Deploy PR to staging
+    needs: [verify, secret-scan]
+    # Fork PRs get no secrets; review those locally.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    environment:
+      name: staging
+    steps:
+      # Deploy config comes from main, not the PR, so a branch cannot point a
+      # staging deploy at the production worker by mistake.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          sparse-checkout: |
+            wrangler.jsonc
+            package.json
+          sparse-checkout-cone-mode: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: worker-bundle-pr
+          path: bundle
+      - run: rm -rf .open-next && mv bundle/.open-next .open-next
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --env staging
+      - name: Smoke test staging
+        run: |
+          base="https://tinash-staging.${{ vars.WORKERS_SUBDOMAIN }}.workers.dev"
+          fail=0
+          for p in / /services /ddd-services /careers /contact /login; do
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 30 "$base$p"); echo "$p -> $code"
+            [ "$code" = 200 ] || fail=1
+          done
+          echo "### Staging: $base" >> "$GITHUB_STEP_SUMMARY"
+          exit $fail

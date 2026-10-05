@@ -8,6 +8,8 @@ export const site = {
   legalName: "Tinash Homecare Services LLC",
   tagline: "Care that lets your loved one stay home",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://tinashhomecareservices.com",
+  // Team CRM host. Never linked from the public site.
+  crmUrl: process.env.NEXT_PUBLIC_CRM_URL ?? "https://crm.tinashhomecareservices.com",
   logo: "/brand/logo.png",
   logoWhite: "/brand/logo-white.png",
   phone: "+1 (973) 636-8328",
