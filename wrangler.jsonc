@@ -9,12 +9,13 @@
   "assets": { "directory": ".open-next/assets", "binding": "ASSETS" },
   "observability": { "enabled": true },
 
-  // Custom domains are added at DNS cutover, once the zone is on Cloudflare:
-  //   "routes": [
-  //     { "pattern": "tinashhomecareservices.com", "custom_domain": true },
-  //     { "pattern": "www.tinashhomecareservices.com", "custom_domain": true },
-  //     { "pattern": "crm.tinashhomecareservices.com", "custom_domain": true }
-  //   ],
+  // Custom domains: Cloudflare manages their DNS records and certificates.
+  // crm.* serves only the team CRM (see src/proxy.ts); never link it publicly.
+  "routes": [
+    { "pattern": "tinashhomecareservices.com", "custom_domain": true },
+    { "pattern": "www.tinashhomecareservices.com", "custom_domain": true },
+    { "pattern": "crm.tinashhomecareservices.com", "custom_domain": true }
+  ],
   // No secrets or vars here: the app only needs public NEXT_PUBLIC_* values,
   // which Next inlines at build time (GitHub repository variables).
   "env": {

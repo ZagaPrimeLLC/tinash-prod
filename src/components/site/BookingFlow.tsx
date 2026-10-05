@@ -4,7 +4,7 @@ import { useMemo, useState, useSyncExternalStore } from 'react';
 import { CalendarCheck, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import { createClient, supabaseConfigured } from '@/lib/supabase/client';
 import { getAttribution } from '@/lib/attribution';
-import { submitLead } from '@/lib/leads';
+import { submitLead, pingOffice } from '@/lib/leads';
 import { availableDays, SLOT_MINUTES, timeLabel } from '@/lib/booking';
 import { site } from '@/lib/site';
 import FormPrivacyNote from '@/components/site/FormPrivacyNote';
@@ -58,6 +58,7 @@ export default function BookingFlow() {
       });
       failed = Boolean(error);
       limited = error?.code === 'PT429';
+      if (!error) pingOffice({ kind: 'booking', name, email, phone, slot: when, message: notes || null });
     }
     if (!supabaseConfigured || (failed && !limited)) {
       // No booking table reachable: send it as an inquiry so it is not lost.

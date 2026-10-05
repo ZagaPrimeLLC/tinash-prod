@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { CheckCircle2, AlertCircle, Upload, Loader2 } from 'lucide-react';
 import { createClient, supabaseConfigured } from '@/lib/supabase/client';
 import { getAttribution } from '@/lib/attribution';
-import { submitLead } from '@/lib/leads';
+import { submitLead, pingOffice } from '@/lib/leads';
 import { site } from '@/lib/site';
 import FormPrivacyNote from '@/components/site/FormPrivacyNote';
 
@@ -100,6 +100,13 @@ export default function CareersForm() {
         ? 'We have received several applications from you just now. Please wait a few minutes, or call us.'
         : `We could not send that. Please call us on ${site.phone}.`);
     } else {
+      pingOffice({
+        kind: 'application', name, email, phone,
+        town: answers.area ?? null, availability: answers.availability ?? null,
+        cpr: answers.cpr_first_aid ? 'yes' : null, drives: answers.driver_with_vehicle ? 'yes' : null,
+        resume: resumePath ? 'yes' : 'no', experience,
+        job: answers.role ? `General application (${answers.role})` : null,
+      });
       setDone(true);
       form.reset();
     }
