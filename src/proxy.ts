@@ -30,7 +30,14 @@ function hostKind(host: string): HostKind {
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const kind = hostKind(request.headers.get('host') ?? '');
+  const host = request.headers.get('host') ?? '';
+
+  // One canonical site: www.* permanently redirects to the bare domain.
+  if (host.toLowerCase().startsWith('www.')) {
+    return NextResponse.redirect(new URL(pathname + request.nextUrl.search, PUBLIC_ORIGIN), 308);
+  }
+
+  const kind = hostKind(host);
   const isCrmPath = startsWithAny(pathname, CRM_PREFIXES);
 
   if (kind === 'public' && isCrmPath) {
