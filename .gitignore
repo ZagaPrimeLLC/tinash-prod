@@ -45,3 +45,9 @@ next-env.d.ts
 .open-next/
 .wrangler/
 .dev.vars
+
+# local tooling
+.claude/
+.vscode/
+supabase/.temp/
+.DS_Store

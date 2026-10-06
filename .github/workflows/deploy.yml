@@ -31,10 +31,10 @@ jobs:
       # Guards are steps, not job-level ifs: a skipped job reports as a pass.
       - name: Refuse to promote anything but main
         if: github.ref != 'refs/heads/main'
-        run: { echo "::error::production deploys only from main"; exit 1; }
+        run: echo "::error::production deploys only from main" && exit 1
       - name: Confirm intent
         if: inputs.confirm != 'PROMOTE'
-        run: { echo "::error::type PROMOTE in the confirm box to deploy"; exit 1; }
+        run: echo "::error::type PROMOTE in the confirm box to deploy" && exit 1
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
@@ -64,10 +64,10 @@ jobs:
     steps:
       - name: Refuse to promote anything but main
         if: github.ref != 'refs/heads/main'
-        run: { echo "::error::production deploys only from main"; exit 1; }
+        run: echo "::error::production deploys only from main" && exit 1
       - name: Confirm intent
         if: inputs.confirm != 'PROMOTE'
-        run: { echo "::error::type PROMOTE in the confirm box to deploy"; exit 1; }
+        run: echo "::error::type PROMOTE in the confirm box to deploy" && exit 1
       - uses: actions/download-artifact@v4
         with:
           name: worker-bundle

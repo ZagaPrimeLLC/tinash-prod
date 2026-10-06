@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Tinash Homecare Services — Flyer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --plum-950:#1c0f36; --plum-900:#2c1850; --plum-800:#3b2068; --plum-700:#4a2880; --plum-600:#583092;
+    --plum-200:#d9cbed; --plum-50:#f6f3fb;
+    --teal-300:#7ddbd6; --teal-500:#29beb9; --teal-700:#127572; --mist:#f1f5f8;
+  }
+  @page { size: 8.5in 11in; margin: 0; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 8.5in; height: 11in; }
+  body { font-family: Inter, sans-serif; color: var(--plum-950); background: #fff;
+         -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { position: relative; width: 8.5in; height: 11in; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* Hero */
+  .hero { position: relative; height: 4.3in; color: #fff; }
+  .hero img.bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+  .hero::after { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(100deg, rgba(44,24,80,.92) 0%, rgba(74,40,128,.72) 42%, rgba(88,48,146,.15) 75%, transparent 100%),
+                linear-gradient(0deg, rgba(28,15,54,.55) 0%, transparent 45%); }
+  .hero .inner { position: relative; z-index: 1; padding: .4in .55in .5in; height: 100%; display: flex; flex-direction: column; }
+  .logo { width: 2.05in; }
+  .eyebrow { margin-top: auto; display: inline-flex; align-items: center; gap: .1in; font: 700 9pt Montserrat; letter-spacing: .16em; text-transform: uppercase; color: var(--teal-300); }
+  .eyebrow::before { content: ""; width: .32in; height: 2px; background: var(--teal-500); border-radius: 2px; }
+  h1 { margin-top: .08in; font: 800 30pt/1.03 Montserrat; letter-spacing: -.01em; max-width: 5.2in; }
+  h1 em { font-style: normal; color: var(--teal-300); }
+  .hero p.sub { margin-top: .12in; max-width: 4.5in; font-size: 11pt; line-height: 1.5; color: rgba(255,255,255,.92); }
+  .curve { position: absolute; left: -5%; right: -5%; bottom: -.36in; height: .62in; background: #fff; border-radius: 50% 50% 0 0 / 100% 100% 0 0; z-index: 2; }
+
+  /* Body */
+  .body { flex: 1; padding: .32in .55in .12in; display: flex; flex-direction: column; gap: .13in; }
+  .lines { display: grid; grid-template-columns: 1fr 1fr; gap: .18in; }
+  .card { border-radius: .18in; padding: .18in .22in; }
+  .card.home { background: var(--plum-50); border: 1px solid var(--plum-200); }
+  .card.ddd { background: linear-gradient(135deg, #6a3fa8, #583092 55%, #4a2880); color: #fff; }
+  .card h2 { font: 800 15pt Montserrat; }
+  .card .who { margin-top: .03in; font-size: 8.6pt; line-height: 1.4; }
+  .card.home .who { color: var(--plum-700); }
+  .card.ddd .who { color: var(--teal-300); }
+  .card ul { list-style: none; margin-top: .12in; display: grid; gap: .065in; }
+  .card li { display: flex; gap: .09in; align-items: flex-start; font-size: 9.8pt; line-height: 1.32; font-weight: 600; }
+  .card li span.d { font-weight: 400; display: block; font-size: 8.4pt; opacity: .85; }
+  .tick { flex: none; width: .19in; height: .19in; border-radius: 50%; display: grid; place-items: center; margin-top: .01in; }
+  .home .tick { background: var(--teal-500); }
+  .ddd .tick { background: rgba(255,255,255,.18); }
+  .tick svg { width: .11in; height: .11in; }
+
+  .guide { display: flex; align-items: center; gap: .18in; border-radius: .18in; padding: .15in .22in;
+           background: #fff; border: 1.5px solid var(--teal-500); }
+  .guide .badge { flex: none; font: 800 8pt Montserrat; letter-spacing: .08em; text-transform: uppercase; color: var(--plum-950); background: var(--teal-500); border-radius: 99px; padding: .05in .12in; }
+  .guide p { font-size: 9.4pt; line-height: 1.4; }
+  .guide strong { font-family: Montserrat; }
+
+  .why { display: grid; grid-template-columns: repeat(4, 1fr); gap: .12in; }
+  .why div { text-align: center; font-size: 8.3pt; line-height: 1.35; color: var(--plum-800); }
+  .why b { display: block; font: 800 10pt Montserrat; color: var(--plum-950); margin-bottom: .02in; }
+
+  /* Footer band */
+  .foot { margin-top: auto; background: var(--plum-950); color: #fff; padding: .22in .55in .16in; display: grid; grid-template-columns: 1fr auto; gap: .3in; align-items: center; position: relative; overflow: hidden; }
+  .foot::before { content: ""; position: absolute; right: -1in; top: -1.2in; width: 3in; height: 3in; border-radius: 50%; background: rgba(41,190,185,.22); filter: blur(30px); }
+  .foot .cta { position: relative; }
+  .foot .cta small { font: 700 8.5pt Montserrat; letter-spacing: .14em; text-transform: uppercase; color: var(--teal-300); }
+  .foot .phone { display: block; font: 800 25pt Montserrat; margin-top: .03in; letter-spacing: -.01em; }
+  .foot .meta { margin-top: .07in; font-size: 9pt; line-height: 1.55; color: rgba(255,255,255,.85); }
+  .foot .meta b { color: #fff; }
+  .qr { position: relative; background: #fff; border-radius: .12in; padding: .09in; text-align: center; }
+  .qr #qr { width: 1.05in; height: 1.05in; }
+  .qr #qr img, .qr #qr canvas { width: 1.05in !important; height: 1.05in !important; }
+  .qr span { display: block; margin-top: .05in; font: 700 7pt Montserrat; color: var(--plum-950); letter-spacing: .04em; }
+  .legal { position: relative; grid-column: 1 / -1; font-size: 6.6pt; color: rgba(255,255,255,.55); line-height: 1.4; }
+</style>
+</head>
+<body>
+<div class="page">
+  <section class="hero">
+    <img class="bg" src="../../public/media/hero-poster.webp" alt="">
+    <div class="inner">
+      <img class="logo" src="../../public/brand/logo-full-white.png" alt="Tinash Homecare Services">
+      <div class="eyebrow">In-home care across New Jersey</div>
+      <h1>Care that lets your loved one <em>stay home.</em></h1>
+      <p class="sub">Skilled nursing, personal care, and NJ DDD supports, delivered by trained, supervised caregivers who treat your family like their own.</p>
+    </div>
+    <div class="curve"></div>
+  </section>
+
+  <section class="body">
+    <div class="lines">
+      <div class="card home">
+        <h2>Home Care</h2>
+        <p class="who">For seniors and adults who need help at home. Private pay and long-term care insurance.</p>
+        <ul>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#1c0f36" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>Skilled Nursing<span class="d">Medication management, wound care, health checks, doctor visits</span></div></li>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#1c0f36" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>Daily Senior Care<span class="d">Bathing, dressing, mobility, meals</span></div></li>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#1c0f36" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>Companion Care</div></li>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#1c0f36" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>Live-In &amp; 24/7 Care</div></li>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#1c0f36" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>Respite Care<span class="d">A break for family caregivers</span></div></li>
+        </ul>
+      </div>
+      <div class="card ddd">
+        <h2>NJ DDD Services</h2>
+        <p class="who">For adults 21+ eligible for NJ DDD. Paid from the DDD budget, with no bill to the family.</p>
+        <ul>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#7ddbd6" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>Individual Supports<span class="d">One-to-one support at home · Community Care Program</span></div></li>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#7ddbd6" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>Community-Based Supports<span class="d">One-to-one in the community · Supports Program</span></div></li>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#7ddbd6" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>DDD Respite<span class="d">Both DDD programs</span></div></li>
+          <li><i class="tick"><svg viewBox="0 0 24 24" fill="none" stroke="#7ddbd6" stroke-width="4"><path d="M5 12l5 5L20 7"/></svg></i><div>Support coordinators welcome<span class="d">Ask to add Tinash to your ISP</span></div></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="guide">
+      <span class="badge">New · Medicare</span>
+      <p><strong>Caring for someone with dementia?</strong> Through our partnership with PocketRN, eligible families on traditional Medicare can get a dedicated nurse, 24/7 support, and in-home respite through Medicare's GUIDE program, at no cost.</p>
+    </div>
+
+    <div class="why">
+      <div><b>Trained staff</b>Supervised, screened caregivers</div>
+      <div><b>Matched care</b>Paired for skill and personality</div>
+      <div><b>Written plan</b>Care plans built with your family</div>
+      <div><b>Free assessment</b>We recommend only what helps</div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="cta">
+      <small>Call for a free care assessment</small>
+      <span class="phone">(973) 636-8328</span>
+      <p class="meta"><b>tinashhomecareservices.com</b> · info@tinashhomecareservices.com<br>
+      Office hours Mon–Fri 9–7, Sat–Sun 10–2 · Serving Essex, Union, Middlesex, Somerset, Morris &amp; Hudson counties</p>
+    </div>
+    <div class="qr"><div id="qr"></div><span>SCAN TO LEARN MORE</span></div>
+    <p class="legal">Tinash Homecare Services LLC · New Jersey · Services and eligibility vary; call to confirm what fits your family.</p>
+  </footer>
+</div>
+<script>
+  new QRCode(document.getElementById('qr'), {
+    text: 'https://tinashhomecareservices.com/?utm_source=flyer&utm_medium=print&utm_campaign=tinash-services',
+    width: 300, height: 300, colorDark: '#1c0f36', colorLight: '#ffffff', correctLevel: QRCode.CorrectLevel.M
+  });
+</script>
+</body>
+</html>
