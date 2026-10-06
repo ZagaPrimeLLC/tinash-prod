@@ -32,6 +32,11 @@ const db = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SE
 type Mail = { subject: string; fields: [string, unknown][]; body?: string | null; replyTo?: string | null };
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]!);
+// denomailer cannot encode characters outside Latin-1 (em dashes, arrows,
+// emoji in a visitor's message), so map the common ones and drop the rest.
+const latin1 = (s: string) =>
+  s.replace(/[\u2013\u2014]/g, "-").replace(/\u2192/g, "->").replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201c\u201d]/g, '"').replace(/\u2026/g, "...").replace(/[^\x00-\xff]/g, "");
 const present = (v: unknown) => v !== null && v !== undefined && String(v).trim() !== "";
 const when = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString("en-US", { timeZone: "America/New_York", dateStyle: "medium", timeStyle: "short" }) : null;
@@ -153,9 +158,9 @@ Deno.serve(async (req) => {
       from: `Tinash Website <${user}>`,
       to,
       replyTo: mail.replyTo || undefined,
-      subject: mail.subject,
-      content: text,
-      html,
+      subject: latin1(mail.subject),
+      content: latin1(text),
+      html: latin1(html),
     });
     await client.close();
   } catch (e) {
