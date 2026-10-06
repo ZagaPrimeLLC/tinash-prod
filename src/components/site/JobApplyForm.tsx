@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { AlertCircle, CheckCircle2, Upload } from 'lucide-react';
-import { pingOffice } from '@/lib/leads';
 import { createClient } from '@/lib/supabase/client';
 import { getAttribution } from '@/lib/attribution';
 import { site } from '@/lib/site';
@@ -90,14 +89,6 @@ export default function JobApplyForm({ jobId, jobTitle }: { jobId: string; jobTi
           : `We could not send that. Please call us on ${site.phone}.`
       );
     } else {
-      pingOffice({
-        kind: 'application', name, email, phone, job: jobTitle,
-        town: String(fd.get('area') ?? '').trim() || null,
-        availability: String(fd.get('availability') ?? '') || null,
-        cpr: fd.get('cpr') ? 'yes' : null, drives: fd.get('driver') ? 'yes' : null,
-        resume: resumePath ? 'yes' : 'no',
-        experience: String(fd.get('experience') ?? '').trim(),
-      });
       setDone(true);
     }
   }

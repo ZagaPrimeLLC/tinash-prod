@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { anonClient } from "@/lib/supabase/anon";
 import { isCareService } from "@/lib/care-services";
-import { notifyOffice } from "@/lib/notify";
 
 export const runtime = "nodejs";
 
@@ -77,28 +76,11 @@ export async function POST(req: Request) {
     }
   }
 
-  const savedInCrm = stored || savedNow;
-  const label =
-    kind === "consulting" ? "Consulting inquiry"
-    : kind === "chat" ? "Chat assistant callback request"
-    : kind === "careers" ? "Caregiver inquiry"
-    : `${service || "Care"} inquiry`;
-  const sent = await notifyOffice({
-    subject: `New ${label} from ${name}`,
-    fields: [
-      ["Name", name],
-      ["Phone", phone],
-      ["Email", email],
-      ["Service", service || null],
-      ["From page", sourcePage],
-      ["Saved in CRM", savedInCrm ? "Yes (CRM → Inbox)" : "NO — reply from this email"],
-    ],
-    body: message,
-    replyTo: email || null,
-  });
-  if (sent !== "failed" || savedInCrm) {
-    return NextResponse.json({ ok: true, ...(sent === "logged" ? { note: "email_not_configured" } : {}) });
+  if (stored || savedNow) {
+    // The office is emailed by the database (notify-office Edge Function).
+    return NextResponse.json({ ok: true });
   }
-  // Neither stored nor emailed: tell the visitor so they can call instead.
+  // Not stored anywhere (Supabase unreachable): log so it is not lost silently.
+  console.error("INQUIRY NOT STORED", { kind, service, name, phone, email, message });
   return NextResponse.json({ error: "send_failed" }, { status: 502 });
 }

@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { Mail, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
-import { pingOffice } from '@/lib/leads';
 import { createClient, supabaseConfigured } from '@/lib/supabase/client';
 import { getAttribution } from '@/lib/attribution';
 
@@ -36,7 +35,6 @@ export default function NewsletterSignup() {
       else if (err.code === 'PT429') setError('Too many tries just now. Please wait a few minutes.');
       else setError('That did not go through. Please try again later.');
     } else {
-      pingOffice({ kind: 'newsletter', email });
       setDone(true);
     }
   }

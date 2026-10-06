@@ -78,17 +78,3 @@ export async function submitLead(lead: Lead): Promise<LeadResult> {
   }
 }
 
-/**
- * Ask the server to email the office about a submission the browser has
- * already saved to Supabase (bookings, applications, newsletter). Fire and
- * forget: the record is safe in the CRM whether or not the email goes out.
- */
-export function pingOffice(payload: Record<string, string | boolean | null | undefined> & { kind: 'booking' | 'application' | 'newsletter' }) {
-  const body = { ...payload, source_page: typeof window !== 'undefined' ? window.location.pathname.slice(0, 200) : null };
-  fetch('/api/notify', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-    keepalive: true,
-  }).catch(() => {});
-}
