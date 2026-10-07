@@ -12,9 +12,9 @@ export const site = {
   crmUrl: process.env.NEXT_PUBLIC_CRM_URL ?? "https://crm.tinashhomecareservices.com",
   logo: "/brand/logo.png",
   logoWhite: "/brand/logo-white.png",
-  phone: "+1 (973) 452-0185",
-  phoneHref: "tel:+19734520185",
-  whatsappHref: "https://wa.me/19734520185",
+  phone: "+1 (973) 636-8328",
+  phoneHref: "tel:+19736368328",
+  whatsappHref: "https://wa.me/19736368328",
   email: "info@tinashhomecareservices.com",
   hours: [
     { days: "Mon–Fri", time: "9:00 AM – 5:00 PM" },
