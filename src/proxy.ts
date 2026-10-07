@@ -35,11 +35,14 @@ export async function proxy(request: NextRequest) {
   // One canonical URL per page, in one hop: www.* goes to the bare domain and
   // a trailing slash is dropped (next.config.ts sets skipTrailingSlashRedirect
   // so old WordPress "/path/" redirects run first). API routes are left alone.
+  // Plain http:// on a real domain also goes to https, so Google sees one
+  // version of each page.
   const isWww = host.toLowerCase().startsWith('www.');
+  const isHttp = request.nextUrl.protocol === 'http:' && hostKind(host) !== 'open';
   const hasSlash = pathname !== '/' && pathname.endsWith('/') && !pathname.startsWith('/api/');
-  if (isWww || hasSlash) {
+  if (isWww || isHttp || hasSlash) {
     const path = hasSlash ? pathname.replace(/\/+$/, '') || '/' : pathname;
-    const origin = isWww ? PUBLIC_ORIGIN : request.nextUrl.origin;
+    const origin = isWww ? PUBLIC_ORIGIN : `https://${host}`;
     return NextResponse.redirect(new URL(path + request.nextUrl.search, origin), 308);
   }
 
