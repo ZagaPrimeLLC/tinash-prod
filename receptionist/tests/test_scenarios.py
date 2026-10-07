@@ -166,8 +166,13 @@ async def run_scenario(sc: dict, verbose: bool = True) -> dict:
         line = sc["answers"][key]
     ended_by_bot = convo.ended
     intake, payload, result = await convo.close()
+    claude = convo.session.claude
     return {
         "scenario": sc["id"],
+        "brain": "claude" if claude is not None else "local",
+        "claude_ttfts": list(getattr(claude, "ttfts", []) or []),
+        "usage": convo.session.llm_usage,
+        "fallback_reason": convo.session.llm_fallback_reason,
         "ended_by_assistant": ended_by_bot,
         "end_reason": convo.session.end_reason,
         "turns": len([x for x in log if x[0] == "caller"]),
@@ -219,6 +224,8 @@ async def run_all(verbose=True):
         results.append(out)
         print("Intake JSON:\n" + json.dumps(out["intake"], indent=2))
         print(f"Ended by assistant: {out['ended_by_assistant']} ({out['end_reason']}); turns: {out['turns']}")
+        if out["usage"]:
+            print(f"Claude usage: {out['usage']}; first-word times: {out['claude_ttfts']}")
         print("Problems: " + ("none" if not out["problems"] else "; ".join(out["problems"])), flush=True)
     return results
 

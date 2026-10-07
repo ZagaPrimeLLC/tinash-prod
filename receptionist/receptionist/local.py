@@ -21,7 +21,7 @@ async def run_text():
 
     from .bot import warm_up_llm
 
-    print("Loading the language model (the first time can take a minute)...", flush=True)
+    print("Getting ready...", flush=True)
     await warm_up_llm()
     print("\nText mode. Type what the caller says. Type /quit (or press Ctrl-D) to hang up.\n")
     convo = TextConversation(caller_id="+19735550100")
@@ -40,13 +40,15 @@ async def run_text():
         print(f"Assistant: {reply}")
         if convo.last_was_llm and convo.latencies:
             ttft, total = convo.latencies[-1]
-            print(f"   [answered by the LLM: first words after {ttft:.1f}s, full reply after {total:.1f}s]")
+            print(f"   [model reply: first words after {ttft:.1f}s, full reply after {total:.1f}s]")
     print("\nCall ended. Working out the intake...")
     intake, payload, result = await convo.close()
     import json
 
     print("Intake:", json.dumps(intake, indent=2))
     print("Website result:", result)
+    if convo.session.llm_usage:
+        print("Claude usage:", convo.session.llm_usage)
 
 
 async def run_audio():
@@ -62,7 +64,7 @@ async def run_audio():
 
     from .bot import warm_up_llm
 
-    print("Loading the language model (the first time can take a minute)...", flush=True)
+    print("Getting ready...", flush=True)
     await warm_up_llm()
     session = CallSession(mode="local-audio", caller_id="local-mic")
     parts = build_conversation(session, text_mode=False)
@@ -70,6 +72,9 @@ async def run_audio():
         LocalAudioTransportParams(audio_in_enabled=True, audio_out_enabled=True)
     )
     stt, tts = make_stt(), make_tts()
+    from .bot import init_mode
+
+    await init_mode(parts)
     pipeline = Pipeline(voice_pipeline_processors(transport, parts, stt, tts))
     worker = PipelineWorker(
         pipeline,
@@ -101,6 +106,9 @@ def main():
     logger.remove()
     logger.add(sys.stderr, level="DEBUG" if args.verbose else "WARNING")
     print(f"DRY_RUN is {'ON (nothing is sent to the website)' if settings.dry_run else 'OFF (leads WILL be sent)'}")
+    from .settings import claude_enabled
+
+    print(f"Brain: {settings.claude_model + ' (local model as fallback)' if claude_enabled() else 'local model only'}")
     asyncio.run(run_text() if args.text else run_audio())
 
 

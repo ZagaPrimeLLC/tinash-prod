@@ -150,7 +150,10 @@ async def main():
     print(f"Bot audio saved to {out}")
     if first_bot_media_after:
         lat = first_bot_media_after
-        print(f"Caller-stops-to-bot-starts: min {min(lat):.2f}s, avg {sum(lat) / len(lat):.2f}s, max {max(lat):.2f}s over {len(lat)} turns")
+        import statistics
+
+        print(f"Caller-stops-to-bot-starts: min {min(lat):.2f}s, median {statistics.median(lat):.2f}s, "
+              f"avg {sum(lat) / len(lat):.2f}s, max {max(lat):.2f}s over {len(lat)} turns")
 
 
 if __name__ == "__main__":

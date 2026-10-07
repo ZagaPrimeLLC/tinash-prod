@@ -36,6 +36,9 @@ class CallSession:
     end_reason: str = ""
     emergency_flagged: bool = False
     checklist: object = None  # receptionist.checklist.Checklist, set by bot.py
+    claude: object = None  # receptionist.claude_brain.ClaudeConversation in Claude mode
+    llm_fallback_reason: str = ""
+    llm_usage: dict = field(default_factory=dict)
 
     def add(self, role: str, text: str):
         text = (text or "").strip()
@@ -70,6 +73,10 @@ def save_call(session: CallSession, intake: dict, payload: dict | None, post_res
         "end_reason": session.end_reason,
         "emergency_flagged": session.emergency_flagged,
         "checklist": session.checklist.summary() if session.checklist else None,
+        "brain": "claude" if session.claude is not None else "local",
+        "claude_fallback_reason": session.llm_fallback_reason,
+        "claude_recorded_intake": getattr(session.claude, "intake", None),
+        "llm_usage": session.llm_usage,
         "intake": intake,
         "inquiry_payload": payload,
         "inquiry_result": post_result,

@@ -20,27 +20,33 @@ echo "== 2/7 Python environment"
 .venv/bin/pip install --upgrade pip
 .venv/bin/pip install -r requirements.txt
 
-echo "== 3/7 Ollama (local language model server)"
-if ! command -v ollama >/dev/null; then
-  curl -fsSL https://ollama.com/install.sh | sh
+echo "== 3/7 Ollama (optional: offline fallback when Claude is unreachable)"
+# Claude is the conversation brain. Ollama only takes over if the internet or
+# the Claude API is down; without it the assistant still takes a name and
+# number. Install it with:  INSTALL_OLLAMA=1 bash deploy/install_pi.sh
+if [ "${INSTALL_OLLAMA:-0}" = "1" ]; then
+  if ! command -v ollama >/dev/null; then
+    curl -fsSL https://ollama.com/install.sh | sh
+  fi
+  # Keep the model loaded, give it room for the fact sheet, and keep it offline.
+  sudo mkdir -p /etc/systemd/system/ollama.service.d
+  printf '%s\n' '[Service]' \
+    'Environment="OLLAMA_HOST=127.0.0.1:11434"' \
+    'Environment="OLLAMA_CONTEXT_LENGTH=8192"' \
+    'Environment="OLLAMA_KEEP_ALIVE=-1"' \
+    'Environment="OLLAMA_NUM_PARALLEL=1"' \
+    'Environment="OLLAMA_NO_CLOUD=1"' \
+    | sudo tee /etc/systemd/system/ollama.service.d/tinash.conf >/dev/null
+  sudo systemctl daemon-reload
+  sudo systemctl enable --now ollama
+  sudo systemctl restart ollama
+  for i in $(seq 1 30); do curl -sf http://127.0.0.1:11434/api/tags >/dev/null && break; sleep 2; done
+  echo "== 4/7 Local fallback model ($MODEL, about 2 GB)"
+  ollama pull "$MODEL"
+else
+  echo "Skipping Ollama. (Set INSTALL_OLLAMA=1 to add the offline fallback.)"
+  echo "== 4/7 (no local model)"
 fi
-# Keep the model loaded, give it room for the fact sheet, and keep it offline.
-sudo mkdir -p /etc/systemd/system/ollama.service.d
-sudo tee /etc/systemd/system/ollama.service.d/tinash.conf >/dev/null <<'EOF'
-[Service]
-Environment="OLLAMA_HOST=127.0.0.1:11434"
-Environment="OLLAMA_CONTEXT_LENGTH=8192"
-Environment="OLLAMA_KEEP_ALIVE=-1"
-Environment="OLLAMA_NUM_PARALLEL=1"
-Environment="OLLAMA_NO_CLOUD=1"
-EOF
-sudo systemctl daemon-reload
-sudo systemctl enable --now ollama
-sudo systemctl restart ollama
-for i in $(seq 1 30); do curl -sf http://127.0.0.1:11434/api/tags >/dev/null && break; sleep 2; done
-
-echo "== 4/7 Language model ($MODEL, about 2 GB)"
-ollama pull "$MODEL"
 
 echo "== 5/7 Speech models (Whisper base.en + small.en, Piper voice)"
 .venv/bin/python scripts/download_models.py
@@ -51,6 +57,7 @@ if [ ! -f .env ]; then
   sed -i "s/^CALL_TOKEN=.*/CALL_TOKEN=$(openssl rand -hex 24)/" .env
   sed -i "s/^LLM_MODEL=.*/LLM_MODEL=$MODEL/" .env
   echo "Created .env with a new CALL_TOKEN. DRY_RUN is true until you change it."
+  echo "Now add your Claude API key:  nano .env   (the ANTHROPIC_API_KEY= line)"
 fi
 chmod 600 .env
 mkdir -p data && chmod 700 data

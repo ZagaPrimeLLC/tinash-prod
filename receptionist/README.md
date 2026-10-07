@@ -2,8 +2,10 @@
 
 A virtual receptionist that answers Tinash Homecare Services calls when nobody
 in the office can pick up. It runs on a small computer in the office (a
-Raspberry Pi 5), not in the cloud: the speech recognition, the language model
-and the voice all run on that box.
+Raspberry Pi 5). Speech recognition and the voice run on that box; the
+conversation itself is handled by **Claude** (Anthropic's AI model,
+`claude-sonnet-5-5`) over the internet. If Claude can't be reached, the call
+carries on with a local fallback on the Pi.
 
 ## What it does
 
@@ -38,16 +40,18 @@ and the voice all run on that box.
 | Part | What |
 |---|---|
 | Phone line | Telnyx number + TeXML `<Connect><Stream>` (Pipecat has a built-in Telnyx serializer) |
-| Pipeline | [Pipecat](https://github.com/pipecat-ai/pipecat) 1.12: Silero VAD + smart-turn, faster-whisper (Whisper `base.en` or `small.en`, int8), Ollama (`qwen2.5:3b`), Piper (`en_US-amy-medium`) |
-| Conversation | `receptionist/checklist.py` runs the question order in plain code. Simple answers get the next question instantly; only real questions from the caller go to the language model. A 3B model on a Pi is too slow and too forgetful to run a 9-question intake by itself (tested: it skipped questions, invented phone numbers and never called its "hang up" tool). |
-| Intake record | After the call the model fills a fixed JSON form from the transcript (Ollama structured output), checked against what the script captured. |
+| Pipeline | [Pipecat](https://github.com/pipecat-ai/pipecat) 1.12: Silero VAD + smart-turn, faster-whisper (Whisper `base.en` or `small.en`, int8) and Piper (`en_US-amy-medium`) on the Pi |
+| Conversation (default) | Claude Sonnet 5.5 through the official `anthropic` SDK (`receptionist/claude_brain.py`), streamed so the voice starts on the first sentence. It runs the intake naturally from `config/script.md` + `config/facts.md`, with two tools: `record_intake` (strict schema) and `end_call` (which really hangs up). Low-latency settings: `thinking: between_tools`, effort `low`; the long prompt is cached; Anthropic's server-side fallback retries a declined request on another model. |
+| Fallback | If Claude errors, refuses, or is silent for 15 s (it says "One moment, please" at 6 s), the rest of the call uses the local script in `receptionist/checklist.py`: with Ollama (`qwen2.5:3b`) installed it continues the full intake; without Ollama it takes the name and number and says a person will call back. `LLM_PROVIDER=ollama` runs fully offline. |
+| Intake record | After the call Claude fills a fixed JSON form from the transcript (structured output, about 4 s), merged with what `record_intake` captured. Offline: Ollama does it (20 to 26 s). |
 | Server | FastAPI: `POST /texml/<token>` (Telnyx webhook), `WS /ws/<token>` (call audio), `GET /health` |
 
 Files you may want to edit:
 
 - `config/facts.md`: everything the assistant is allowed to say about Tinash.
-- `config/script.md`: tone and rules for the language model.
-- `receptionist/checklist.py`: the exact wording and order of the questions
+- `config/script.md`: how Claude runs the call (tone, questions, rules).
+- `config/script_offline.md`: the local model's rules in fallback mode.
+- `receptionist/checklist.py`: the fallback script's exact questions
   (`QUESTION = {...}` near the top).
 
 After editing, restart the service (`sudo systemctl restart tinash-receptionist`).
@@ -62,15 +66,20 @@ After editing, restart the service (`sudo systemctl restart tinash-receptionist`
 | Cloudflare Tunnel | free (the domain must use Cloudflare DNS) |
 | Raspberry Pi 5 (8 or 16 GB) + NVMe drive + case + official power supply | about $150 to $250 one time |
 | Electricity | about $1 a month |
-| AI services | $0. Everything runs on the Pi; no OpenAI or other cloud AI account. |
+| Claude API (Anthropic) | Claude Sonnet 5.5 is $2 per million input tokens and $10 per million output tokens (cached input $0.20). **Measured in testing: about 2 to 6 cents per completed call, typically 3 to 4 cents** (very short calls under 1 cent). At 300 calls a month: **about $10 to $18 a month**, plus under $1 a month to keep the prompt cache warm. Check current pricing. |
+| Local fallback (Ollama) | $0, optional |
 
 ## Step 1: try it on the Mac (no phone account needed)
 
 From this folder (`receptionist/`):
 
 ```bash
-bash scripts/install_mac.sh          # one time: Python packages, models, Ollama
+bash scripts/install_mac.sh          # one time: Python packages and speech models
+INSTALL_OLLAMA=1 bash scripts/install_mac.sh   # optional: also the offline fallback model
 ```
+
+Put the Claude API key in `.env` (`ANTHROPIC_API_KEY=`). Without a key, or
+with `LLM_PROVIDER=ollama`, it runs on the local model only.
 
 Then either:
 
@@ -185,21 +194,25 @@ Use a wired network connection if possible.
 ```bash
 git clone <this repository> ~/tinash-prod      # or copy the receptionist/ folder
 cd ~/tinash-prod/receptionist
-bash deploy/install_pi.sh
+bash deploy/install_pi.sh                      # Claude mode (recommended)
+INSTALL_OLLAMA=1 bash deploy/install_pi.sh     # also install the offline fallback model
 ```
 
-The installer sets up Python, Ollama with the model, the speech models, a
-`.env` with a new random `CALL_TOKEN` (with `DRY_RUN=true`) and a system
-service that starts at boot. Then:
+The installer sets up Python, the speech models, a `.env` with a new random
+`CALL_TOKEN` (with `DRY_RUN=true`) and a system service that starts at boot.
+Ollama is optional now: it is only used if Claude can't be reached, and
+without it the assistant still takes a name and number. Then:
 
-1. Do step 3 (tunnel) and step 2 (Telnyx webhook URL with the token).
-2. Call the Telnyx number directly from a cell phone and test a few calls.
+1. Put the Claude API key in `.env` (`nano .env`, the `ANTHROPIC_API_KEY=`
+   line), then `sudo systemctl restart tinash-receptionist`.
+2. Do step 3 (tunnel) and step 2 (Telnyx webhook URL with the token).
+3. Call the Telnyx number directly from a cell phone and test a few calls.
    With `DRY_RUN=true`, the message is printed in the log instead of sent:
    `journalctl -u tinash-receptionist -f`
-3. When happy, set `DRY_RUN=false` in `.env`, then
+4. When happy, set `DRY_RUN=false` in `.env`, then
    `sudo systemctl restart tinash-receptionist`. Make one more test call and
    check it appears in the CRM.
-4. Turn on T-Mobile forwarding (step 4).
+5. Turn on T-Mobile forwarding (step 4).
 
 Useful commands:
 
@@ -210,27 +223,28 @@ curl -s localhost:8765/health                 # quick check
 ls data/transcripts/                          # local call records (kept 30 days)
 ```
 
-### How fast will it be on the Pi? (honest expectations)
+### How fast is it? (honest expectations)
 
-Measured on the test Mac (Intel i7, 2020) over a simulated Telnyx call:
+Measured on the test Mac (Intel i7, 2020), simulated Telnyx calls, Whisper small.en:
 
-| Step | Mac (measured) | Pi 5 (estimate, not measured) |
+| | Claude (default) | Local model only (offline mode) |
 |---|---|---|
-| Speech recognition per sentence, Whisper small.en | 1.7 to 2.2 s | 4 to 6 s |
-| Speech recognition per sentence, Whisper base.en | about 0.7 s | 1.5 to 2.5 s |
-| Scripted reply (most turns: no language model) | under 0.1 s | under 0.2 s |
-| Voice starts after text is ready (Piper) | 0.1 to 0.4 s | 0.3 to 0.8 s |
-| Caller stops talking until assistant starts (normal turn) | 2 to 3.5 s with small.en | about 2.5 to 4 s with base.en |
-| Turn where the caller asks a question (language model) | first words about 2.5 s after the text, about 6 to 10 s total | first words about 6 to 12 s after the text |
+| Speech recognition per sentence (runs on the box) | 1.7 to 2.1 s | same |
+| Claude: first words after the caller's sentence is recognized | median about 1.4 s; occasional slow turns of 3 to 7 s | - |
+| Caller stops talking until the assistant starts, normal turn | median 3.3 s, max 4.3 s | 2 to 3.5 s (scripted reply) |
+| Caller asks a question ("how much does it cost?") | about 4 s | 6 to 10 s |
+| After-call intake form | about 4 s | 20 to 26 s |
 
-So on the Pi most of the call feels like a slightly slow human
-receptionist, but a caller's question ("how much does it cost?", "do you
-cover Morris County?") can take several seconds to answer. That is why the
-`.env.example` uses `base.en` on the Pi. If questions are too slow, use the
-smaller `qwen2.5:1.5b` model (`ollama pull qwen2.5:1.5b`, set `LLM_MODEL`):
-roughly twice as fast, a little less careful. Pi figures are estimates
-scaled from the Mac numbers and published Pi 5 benchmarks. Measure on the
-real Pi with `scripts/fake_telnyx_call.py` (below).
+On a Pi 5 the speech recognition is the slow part (estimates, not measured):
+Whisper small.en about 4 to 6 s per sentence, base.en about 1.5 to 2.5 s.
+That is why `.env.example` uses `base.en` on the Pi; expect roughly 2.5 to
+4.5 s from the caller finishing to the assistant starting. Claude's part
+doesn't change on the Pi (it runs at Anthropic). Measure on the real Pi with
+`scripts/fake_telnyx_call.py` (below).
+
+The server keeps Claude's prompt cache warm (a tiny request every 50
+minutes, under $1 a month), because the first turn after the cache expires
+can take 4 to 7 s.
 
 The Pi handles **one call at a time** (`MAX_CONCURRENT_CALLS=1`). A second
 caller during a call hears "all of our lines are busy, please call again".
@@ -255,17 +269,23 @@ CALL_TOKEN=<token from .env> .venv/bin/python scripts/fake_telnyx_call.py
   intake answers and a short excerpt. New Jersey is a one-party-consent state,
   but some callers may be in other states; the greeting's notice covers note
   taking. Talk to your attorney if you want to record audio.
-- **HIPAA:** callers may mention health details. Everything here runs on
-  your own device; nothing goes to a cloud AI service. Do **not** switch the
-  language model or speech recognition to a cloud provider (OpenAI, Google,
-  etc.) unless that provider signs a Business Associate Agreement (BAA) with
-  Tinash. Telnyx carries the call audio; ask Telnyx about a BAA if you need
-  one for phone traffic. The CRM/website side already handles inquiries today.
+- **HIPAA: get Anthropic's BAA before real patient calls.** In Claude mode
+  the text of what callers say (not the audio) is sent to Anthropic's API.
+  Callers may mention health details, so before the assistant answers real
+  calls, sign a Business Associate Agreement (BAA) with Anthropic (contact
+  Anthropic sales; a BAA covers specific API features, so confirm the
+  features this uses: the Messages API with prompt caching, tool use, and
+  the server-side fallback beta). **Until then, use it for test calls only**,
+  or run `LLM_PROVIDER=ollama` (everything stays on the Pi). Speech
+  recognition and the voice always run on the Pi. Telnyx carries the call
+  audio; ask Telnyx about a BAA for phone traffic too. Don't switch other
+  parts to cloud services without a BAA.
 - **Logs:** the service logs at `LOG_LEVEL=INFO`, which leaves out what
   callers say. Only switch to `DEBUG` while troubleshooting (with `DRY_RUN=true`
   the would-be message is printed to the log too).
-- **Security:** keep `.env` private (it holds the `CALL_TOKEN` and the Telnyx
-  key). The server only listens on the Pi itself; the public only reaches it
+- **Security:** keep `.env` private (it holds the Claude API key, the
+  `CALL_TOKEN` and the Telnyx key). Never paste the key into chat, email or
+  the code. The server only listens on the Pi itself; the public only reaches it
   through the tunnel, and only with the token. Keep the Pi updated
   (`sudo apt update && sudo apt full-upgrade` monthly).
 - **Emergencies:** the assistant tells callers to hang up and call 911 and
@@ -277,8 +297,9 @@ CALL_TOKEN=<token from .env> .venv/bin/python scripts/fake_telnyx_call.py
 
 | Problem | Fix |
 |---|---|
-| `/health` says `degraded` | Ollama not running or model missing: `sudo systemctl restart ollama`, `ollama list` |
+| `/health` says `degraded` | No brain available: Claude key missing (`ANTHROPIC_API_KEY` in `.env`) and Ollama not running |
+| Calls say "I'm having trouble on my end" | Claude unreachable (internet, API key, Anthropic outage). The log shows `Claude unavailable (...)`. The message is still taken. |
 | Telnyx call connects but silence | Tunnel down (`systemctl status cloudflared`), or wrong `PUBLIC_WS_URL`/token in `.env` |
 | Messages not in the CRM | `DRY_RUN` still `true`, or check the log for `Inquiry post` errors (the website limits 5 requests a minute per address) |
 | Assistant mishears names | Use `WHISPER_MODEL=models/whisper/small.en` (slower, more accurate) |
-| Replies too slow | `WHISPER_MODEL=models/whisper/base.en`, `LLM_MODEL=qwen2.5:1.5b` |
+| Replies too slow | `WHISPER_MODEL=models/whisper/base.en` (speech recognition is the slowest part on a Pi) |

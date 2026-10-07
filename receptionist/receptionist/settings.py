@@ -26,7 +26,16 @@ def _path(name: str, default: Path) -> Path:
 
 @dataclass(frozen=True)
 class Settings:
-    # Language model (Ollama, OpenAI-compatible API)
+    # Conversation brain: "claude" (default; local Ollama is the offline fallback) or "ollama"
+    llm_provider: str = os.getenv("LLM_PROVIDER", "claude").strip().lower()
+    claude_model: str = os.getenv("CLAUDE_MODEL", "claude-sonnet-5-5")
+    claude_effort: str = os.getenv("CLAUDE_EFFORT", "low")
+    claude_max_tokens: int = int(os.getenv("CLAUDE_MAX_TOKENS", "600"))
+    claude_first_token_timeout: float = float(os.getenv("CLAUDE_FIRST_TOKEN_TIMEOUT", "6"))
+    claude_turn_timeout: float = float(os.getenv("CLAUDE_TURN_TIMEOUT", "15"))
+    claude_server_fallback: bool = _bool("CLAUDE_SERVER_FALLBACK", True)
+
+    # Local language model (Ollama, OpenAI-compatible API)
     ollama_base_url: str = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")
     llm_model: str = os.getenv("LLM_MODEL", "qwen2.5:3b")
     llm_temperature: float = float(os.getenv("LLM_TEMPERATURE", "0.3"))
@@ -64,3 +73,8 @@ class Settings:
 
 
 settings = Settings()
+
+
+def claude_enabled() -> bool:
+    """Claude is used when selected and an API key is configured (the key is never logged)."""
+    return settings.llm_provider == "claude" and bool(os.getenv("ANTHROPIC_API_KEY"))

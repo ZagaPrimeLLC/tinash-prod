@@ -33,6 +33,8 @@ from pipecat.workers.runner import WorkerRunner
 
 from .bot import (
     _whisper_model,
+    init_mode,
+    ollama_available,
     build_conversation,
     finish_call,
     make_stt,
@@ -63,6 +65,17 @@ async def _daily_cleanup():
         await asyncio.sleep(6 * 3600)
 
 
+async def _keep_claude_warm():
+    """Renew Claude's 1-hour prompt cache so the first words of a call come quickly."""
+    from .claude_brain import warm_claude
+    from .settings import claude_enabled
+
+    while claude_enabled():
+        await asyncio.sleep(50 * 60)
+        if state["active_calls"] == 0:
+            await warm_claude()
+
+
 @contextlib.asynccontextmanager
 async def lifespan(app: FastAPI):
     if not settings.call_token:
@@ -76,9 +89,11 @@ async def lifespan(app: FastAPI):
         state["llm_warm"] = await warm_up_llm() >= 0
 
     warm = asyncio.create_task(_warm())
+    keep_warm = asyncio.create_task(_keep_claude_warm())
     yield
     cleanup.cancel()
     warm.cancel()
+    keep_warm.cancel()
 
 
 app = FastAPI(title="Tinash phone receptionist", lifespan=lifespan, docs_url=None, redoc_url=None)
@@ -108,20 +123,18 @@ async def texml_webhook(token: str, request: Request):
 
 @app.get("/health")
 async def health():
-    ollama_ok = False
-    try:
-        async with httpx.AsyncClient(timeout=3) as client:
-            r = await client.get(settings.ollama_base_url.rstrip("/").removesuffix("/v1") + "/api/tags")
-            ollama_ok = r.status_code == 200 and any(
-                m.get("name") == settings.llm_model for m in r.json().get("models", [])
-            )
-    except Exception:
-        pass
+    from .settings import claude_enabled
+
+    ollama_ok = await ollama_available(max_age=0)
+    claude_on = claude_enabled()
+    # With Claude as the brain, Ollama is only the offline fallback.
+    ok = claude_on or ollama_ok
     return {
-        "status": "ok" if ollama_ok else "degraded",
-        "ollama": "ok" if ollama_ok else f"unreachable or model {settings.llm_model} missing",
+        "status": "ok" if ok else "degraded",
+        "brain": settings.claude_model if claude_on else f"ollama {settings.llm_model}",
+        "ollama": "ok" if ollama_ok else f"not available (model {settings.llm_model})"
+        + (" - offline fallback limited to name and number" if claude_on else ""),
         "llm_warm": state["llm_warm"],
-        "model": settings.llm_model,
         "active_calls": state["active_calls"],
         "calls_since_start": state["calls_total"],
         "uptime_secs": int(time.time() - state["started_at"]),
@@ -192,6 +205,7 @@ async def run_call(websocket: WebSocket, call_data, session: CallSession):
         ),
     )
     parts = build_conversation(session, text_mode=False)
+    await init_mode(parts)
     stt, tts = make_stt(), make_tts()
     pipeline = Pipeline(voice_pipeline_processors(transport, parts, stt, tts))
     worker = PipelineWorker(

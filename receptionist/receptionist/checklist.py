@@ -51,7 +51,9 @@ NAME_RE = re.compile(r"\b(?i:my name is|my name's|this is|i am|i'm|it's|name is|
 BARE_NAME_RE = re.compile(r"^\W*([A-Za-z][a-z'\-]+(?:\s+[A-Za-z][a-z'\-]+){0,2})\W*$")
 NOT_NAMES = {"Calling", "Looking", "Interested", "Here", "Fine", "Good", "Not", "Just", "The", "For", "Her", "His",
              "My", "Yes", "No", "Okay", "Sure", "Hello", "Hi", "Thanks", "Thank", "She", "He", "It", "We", "They",
-             "I", "You", "That", "This", "There", "Well", "So", "Um", "Uh", "Yeah", "Oh"}
+             "I", "You", "That", "This", "There", "Well", "So", "Um", "Uh", "Yeah", "Oh", "Personal", "Private",
+             "Within", "Week", "Weekday", "Weekdays", "Morning", "Mornings", "Evening", "Evenings", "Afternoon",
+             "Companion", "Nursing", "Respite", "Home", "Care", "Medicare", "Insurance", "Soon", "Today", "Tomorrow"}
 WHO_RE = re.compile(r"\b(my (mother|mom|father|dad|son|daughter|wife|husband|parents?|grand\w+|aunt|uncle|brother|sister|child|partner|friend|neighbor)|myself|for me\b)", re.I)
 PAY_RE = re.compile(r"\b(private(ly)?|out of pocket|insurance|budget|medicaid|medicare|familycare|self[- ]pay|pay (it )?ourselves)\b", re.I)
 URGENCY_RE = re.compile(r"\b(asap|as soon as possible|right away|immediately|today|tomorrow|this week|next week|within|soon|urgent|next month|no rush|whenever)\b", re.I)
@@ -127,6 +129,7 @@ class Checklist:
     partial_digits: str = ""  # a number said across two sentences
     attempts: dict = field(default_factory=dict)  # how many times each slot was asked
     phone_from_caller_id: bool = False
+    minimal: bool = False        # no language model available: only name + number
     last_question: str = ""      # the question the assistant just asked
     previous_question: str = ""  # the one before this caller turn (context for the LLM)
 
@@ -190,7 +193,7 @@ class Checklist:
                 self.values["who"] = m_who.group(0) + (f", {age.group(1)}" if age and self.last_asked != "phone" else "")
             if "service" not in self.values and map_service(t) != "Not sure yet":
                 self.values["service"] = t
-            if PAY_RE.search(t) and "payment" not in self.values:
+            if PAY_RE.search(t) and "payment" not in self.values and not QUESTION_RE.search(t):
                 self.values["payment"] = t
             if URGENCY_RE.search(t) and "urgency" not in self.values and self.last_asked != "callback_time":
                 self.values["urgency"] = t
@@ -199,9 +202,11 @@ class Checklist:
         if "town" not in self.values and self.last_asked != "town":
             m_town, m_county = TOWN_RE.search(t), COUNTY_RE.search(t)
             if m_town or m_county:
-                self.values["town"] = " ".join(
-                    x for x in ((m_town.group(1) if m_town else ""), (m_county.group(0) if m_county else "")) if x
-                )
+                town = m_town.group(1) if m_town else ""
+                county = m_county.group(0) if m_county else ""
+                if town and county and county.split()[0].lower() == town.split()[0].lower():
+                    county = ""  # "in Union" names the county once, not twice
+                self.values["town"] = " ".join(x for x in (town, county) if x)
         if "callback_time" not in self.values and self.last_asked == "callback_time" and TIME_RE.search(t):
             self.values["callback_time"] = t
 
@@ -216,6 +221,8 @@ class Checklist:
 
     # ---- deciding the reply --------------------------------------------
     def slots(self) -> list[str]:
+        if self.minimal:
+            return ["name", "phone"]
         return JOB_SLOTS if self.track == "job" else FAMILY_SLOTS
 
     def missing(self) -> list[str]:
@@ -243,6 +250,8 @@ class Checklist:
             if self.attempts["confirm_phone"] <= 2:
                 return "confirm_phone", f"I have {spaced(self.phone_digits)}. Is that right?", False
             self.phone_state = "readback-unanswered"  # read back twice, no yes or no: move on
+        if not self.track and self.minimal:
+            self.track = "family"
         if not self.track:
             return "track", QUESTION["track"], False
         if self.wants_to_end or self.user_turns >= 25 or self.complete():

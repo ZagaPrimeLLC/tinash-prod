@@ -24,28 +24,34 @@ if [ "$(uname -m)" = "x86_64" ]; then
     "resampy~=0.4.3" "soundfile~=0.13.1" "soxr~=1.0.0" "openai>=1.74,<4" "typing_extensions>=4.9" \
     "websockets>=13.1" "pyyaml>=6,<7" "num2words>=0.5.14" \
     "faster-whisper~=1.2.1" "piper-tts>=1.3,<2" "requests>=2.32.5,<3" "fastapi>=0.115.6,<1" \
-    "uvicorn>=0.32,<1" "httpx>=0.27,<1" "pytest>=8" "pyaudio~=0.2.14"
+    "uvicorn>=0.32,<1" "httpx>=0.27,<1" "pytest>=8" "pyaudio~=0.2.14" "anthropic>=1.11,<2"
 else
   .venv/bin/pip install -q -r requirements.txt "pipecat-ai[local]==1.12.0"
 fi
 
 .venv/bin/python scripts/download_models.py
 
-if ! command -v ollama >/dev/null; then
-  if [ "$(uname -m)" = "arm64" ]; then
-    brew install ollama
-  else
-    echo
-    echo "Ollama: Homebrew has no ready-made Intel build (it compiles for a long time)."
-    echo "Download the Mac app from https://ollama.com/download instead, open it once,"
-    echo "then re-run this script."
-    exit 1
+# Ollama is optional: it is only the offline fallback when Claude is the brain.
+if [ "${INSTALL_OLLAMA:-0}" = "1" ] || [ "${LLM_PROVIDER:-claude}" = "ollama" ]; then
+  if ! command -v ollama >/dev/null; then
+    if [ "$(uname -m)" = "arm64" ]; then
+      brew install ollama
+    else
+      echo
+      echo "Ollama: Homebrew has no ready-made Intel build (it compiles for a long time)."
+      echo "Download the Mac app from https://ollama.com/download instead, open it once,"
+      echo "then re-run this script."
+      exit 1
+    fi
   fi
+  ollama list >/dev/null 2>&1 || { echo "Start Ollama (open the Ollama app, or run: ollama serve) and re-run."; exit 1; }
+  ollama pull "${LLM_MODEL:-qwen2.5:3b}"
+else
+  echo "Skipping Ollama (offline fallback). Re-run with INSTALL_OLLAMA=1 to add it."
 fi
-ollama list >/dev/null 2>&1 || { echo "Start Ollama (open the Ollama app, or run: ollama serve) and re-run."; exit 1; }
-ollama pull "${LLM_MODEL:-qwen2.5:3b}"
 
 [ -f .env ] || cp .env.example .env
+grep -q '^ANTHROPIC_API_KEY=.' .env || echo "Add your ANTHROPIC_API_KEY to .env (or set LLM_PROVIDER=ollama)."
 echo
 echo "Done. Try it:"
 echo "  .venv/bin/python -m receptionist.local --text     # type as the caller"

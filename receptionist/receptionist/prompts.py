@@ -1,4 +1,9 @@
-"""Builds the system prompt from the editable files in config/."""
+"""Builds the system prompts from the editable files in config/.
+
+- config/script.md          the Claude conversation (default mode)
+- config/script_offline.md  the local model's narrow role in offline mode
+- config/facts.md           the only facts either may state
+"""
 
 from .settings import settings
 
@@ -15,13 +20,25 @@ EMERGENCY_NOTE = (
 )
 
 
-def system_prompt() -> str:
-    script = (settings.config_dir / "script.md").read_text(encoding="utf-8")
-    facts = (settings.config_dir / "facts.md").read_text(encoding="utf-8")
+def _read(name: str) -> str:
+    return (settings.config_dir / name).read_text(encoding="utf-8").strip()
+
+
+def _with_facts(script: str) -> str:
     return (
-        f"{script.strip()}\n\n"
+        f"{script}\n\n"
         "You have already greeted the caller with: "
         f'"{GREETING}"\n\n'
         "# Fact sheet (the only facts you may state)\n\n"
-        f"{facts.strip()}\n"
+        f"{_read('facts.md')}\n"
     )
+
+
+def system_prompt() -> str:
+    """Offline (Ollama) prompt. Kept byte-stable so the local prompt cache stays warm."""
+    return _with_facts(_read("script_offline.md"))
+
+
+def claude_system_prompt() -> str:
+    """Claude prompt. Stable across calls (no dates or caller details) so it is cached."""
+    return _with_facts(_read("script.md"))

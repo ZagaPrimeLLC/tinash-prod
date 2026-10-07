@@ -31,7 +31,7 @@ class TextConversation:
         self.parts.ctl.on_response = self._on_response
         p = self.parts
         self.pipeline = Pipeline(
-            [p.user_aggregator, p.planner, p.llm, p.tap, p.assistant_aggregator]
+            [p.user_aggregator, p.brain, p.planner, p.llm, p.tap, p.assistant_aggregator]
         )
         self.worker = PipelineWorker(
             self.pipeline,
@@ -59,6 +59,9 @@ class TextConversation:
         return self.parts.ctl.ending or (self._run_task is not None and self._run_task.done())
 
     async def start(self) -> str:
+        from .bot import init_mode
+
+        await init_mode(self.parts)
         await self.runner.add_workers(self.worker)
         self._run_task = asyncio.create_task(self.runner.run())
         await asyncio.sleep(0.3)

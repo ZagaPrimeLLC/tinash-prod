@@ -140,10 +140,32 @@ async def extract_intake(session: CallSession) -> dict:
         logger.error(f"Intake extraction failed: {e}")
         data = {}
     logger.info(f"Intake extraction took {time.perf_counter() - t0:.1f}s")
+    return finalize_intake(session, data)
+
+
+def finalize_intake(session: CallSession, data: dict) -> dict:
+    """Clean up the model's form and fill gaps from what was captured during the call."""
+    cl = session.checklist
+    empty = {k: "" for k in INTAKE_SCHEMA["properties"]}
+    empty["caller_type"] = "other"
     intake = {**empty, **{k: (v if isinstance(v, str) else str(v)) for k, v in data.items() if k in empty}}
     if intake["caller_type"] not in ("family", "job_seeker", "other"):
         intake["caller_type"] = "other"
-    if cl is not None:
+    rec = getattr(session.claude, "intake", None) or {}
+    if rec:
+        # Claude's record_intake calls during the call fill any gaps.
+        for k in ("caller_type", "caller_name", "callback_number", "care_recipient", "relationship",
+                  "service_needed", "town", "county", "payment_type", "urgency", "best_callback_time", "job_role"):
+            if not intake.get(k) or (k == "caller_type" and intake[k] == "other"):
+                v = rec.get(k)
+                if isinstance(v, str) and v.strip():
+                    intake[k] = v.strip()
+        if not intake.get("questions_or_notes") and isinstance(rec.get("notes"), str):
+            intake["questions_or_notes"] = rec["notes"]
+        intake["phone_confirmed_by_caller"] = bool(rec.get("phone_confirmed"))
+        if rec.get("emergency"):
+            session.emergency_flagged = True
+    if cl is not None and cl.values:
         # Deterministic values from the call beat the model's reading of it.
         if cl.phone_digits:
             intake["callback_number"] = cl.phone_digits
