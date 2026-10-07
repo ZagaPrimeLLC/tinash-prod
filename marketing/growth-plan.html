@@ -296,11 +296,11 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
   <div class="tablebox"><table>
     <thead><tr><th>Part</th><th>Choice</th><th>Notes</th></tr></thead>
     <tbody>
-      <tr><td>Phone line</td><td>A SIP number from a low-cost carrier (for example VoIP.ms or Telnyx)</td><td>(973) 636-8328 (T-Mobile) forwards to it when unanswered or after hours, so the main number never changes.</td></tr>
-      <tr><td>Call handling</td><td>Asterisk on the Pi</td><td>Answers the call, plays the greeting, transfers to a person, records nothing it does not need.</td></tr>
+      <tr><td>Phone line</td><td>A Telnyx number that streams call audio to the Pi through a free Cloudflare Tunnel</td><td>(973) 636-8328 (T-Mobile) forwards to it when unanswered or after hours, so the main number never changes.</td></tr>
+      <tr><td>Call handling</td><td>A small web server on the Pi</td><td>Receives each forwarded call, runs the conversation, hangs up, then saves the notes.</td></tr>
       <tr><td>Conversation</td><td>Pipecat (open-source voice-agent framework)</td><td>Runs the turn-taking: listen, think, speak, and interrupt handling.</td></tr>
       <tr><td>Hearing</td><td>faster-whisper (English) on the Pi</td><td>Speech to text, locally.</td></tr>
-      <tr><td>Thinking</td><td>A small local model (3B class, via Ollama) plus a fixed Tinash script</td><td>Follows the intake questions and answers only from an approved fact sheet. No medical advice.</td></tr>
+      <tr><td>Thinking</td><td>A fixed Tinash intake script, plus a small local model (Qwen 2.5 3B via Ollama) for questions</td><td>The script asks the questions in order; the model only answers caller questions from an approved fact sheet. No prices, medical advice or eligibility decisions.</td></tr>
       <tr><td>Voice</td><td>Piper text-to-speech</td><td>Natural voice, runs fast on the Pi.</td></tr>
       <tr><td>Hardware</td><td>Raspberry Pi 5 (8 GB, 16 GB better), NVMe SSD, active cooler, wired internet</td><td>A small battery backup keeps it up through short power cuts.</td></tr>
     </tbody>
@@ -317,7 +317,7 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
 
   <h3>Steps</h3>
   <ol>
-    <li><strong>Build and test (2 weeks, from late October).</strong> Write the intake script and fact sheet with the office, prototype on a laptop with a test number, then move it to the Pi.</li>
+    <li><strong>Built and tested on a Mac (done 7 October).</strong> Three scripted test calls pass. Next: the office reviews the script and fact sheet and tries it by microphone, then sign up for Telnyx, set up the tunnel, and move it to the Pi.</li>
     <li><strong>After hours only (2 weeks).</strong> Forward calls only outside office hours. Review every summary with the office and tune the script.</li>
     <li><strong>Overflow (from early December).</strong> Also answer daytime calls nobody picks up within 4 rings.</li>
   </ol>
