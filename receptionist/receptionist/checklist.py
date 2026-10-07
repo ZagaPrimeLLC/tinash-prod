@@ -356,7 +356,7 @@ class Checklist:
             parts.append("Someone from our team will call you back at the number you are calling from.")
         else:
             parts.append("Someone from our team will call you back.")
-        parts.append("Thank you for calling Tinash Homecare Services. Goodbye.")
+        parts.append("Thanks so much for calling Tinash Homecare Services. Take care, goodbye.")
         return " ".join(parts)
 
     def summary(self) -> dict:

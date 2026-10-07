@@ -6,7 +6,8 @@ Endpoints (behind Cloudflare Tunnel at e.g. https://voice.tinashhomecareservices
 
     POST /texml/{token}   Telnyx asks what to do with a call; we answer with TeXML
                           that streams the call audio to /ws/{token}.
-    WS   /ws/{token}      Telnyx media stream; one Pipecat pipeline per call.
+    POST /twiml/{token}   The same for Twilio (TwiML).
+    WS   /ws/{token}      Telnyx or Twilio media stream; one Pipecat pipeline per call.
     GET  /health          Status for monitoring.
 
 {token} is CALL_TOKEN from .env, a long random string, so strangers who find
@@ -28,11 +29,13 @@ from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.worker import PipelineParams, PipelineWorker
 from pipecat.runner.utils import parse_telephony_websocket
 from pipecat.serializers.telnyx import TelnyxFrameSerializer
+from pipecat.serializers.twilio import TwilioFrameSerializer
 from pipecat.transports.websocket.fastapi import FastAPIWebsocketParams, FastAPIWebsocketTransport
 from pipecat.workers.runner import WorkerRunner
 
 from .bot import (
     _whisper_model,
+    preload_tts,
     init_mode,
     ollama_available,
     build_conversation,
@@ -82,8 +85,9 @@ async def lifespan(app: FastAPI):
         logger.warning("CALL_TOKEN is not set: the webhook and WebSocket will refuse all calls.")
     logger.info(f"DRY_RUN={'on' if settings.dry_run else 'off'}; inquiries go to {settings.inquiry_url}")
     cleanup = asyncio.create_task(_daily_cleanup())
-    # Load the speech model and warm the LLM so the first call is quick.
+    # Load the speech and voice models and warm the LLM so the first call is quick.
     await asyncio.to_thread(_whisper_model)
+    await asyncio.to_thread(preload_tts)
 
     async def _warm():
         state["llm_warm"] = await warm_up_llm() >= 0
@@ -116,6 +120,28 @@ async def texml_webhook(token: str, request: Request):
     return texml(
         "  <Connect>\n"
         f'    <Stream url="{escape(stream_url)}" bidirectionalMode="rtp"></Stream>\n'
+        "  </Connect>\n"
+        "  <Hangup/>"
+    )
+
+
+@app.post("/twiml/{token}")
+async def twiml_webhook(token: str, request: Request):
+    """Twilio's version of the webhook. Twilio sends the caller in the form body
+    and passes it on to the media stream as a custom parameter."""
+    if not _token_ok(token):
+        return Response(status_code=404)
+    if state["active_calls"] >= settings.max_concurrent_calls:
+        logger.warning("Call arrived while busy; playing the busy message")
+        return texml(f"  <Say>{escape(BUSY_MESSAGE)}</Say>\n  <Hangup/>")
+    form = await request.form()
+    caller = str(form.get("From", ""))
+    stream_url = f"{settings.public_ws_url.rstrip('/')}/{token}"
+    return texml(
+        "  <Connect>\n"
+        f'    <Stream url="{escape(stream_url)}">\n'
+        f'      <Parameter name="from_number" value="{escape(caller, {chr(34): "&quot;"})}"/>\n'
+        "    </Stream>\n"
         "  </Connect>\n"
         "  <Hangup/>"
     )
@@ -154,17 +180,17 @@ async def media_stream(websocket: WebSocket, token: str):
         logger.error(f"Bad media stream handshake: {e}")
         await websocket.close()
         return
-    if transport_type != "telnyx":
-        logger.error(f"Unexpected stream type {transport_type}; only Telnyx is configured")
+    if transport_type not in ("telnyx", "twilio"):
+        logger.error(f"Unexpected stream type {transport_type}; only Telnyx and Twilio are supported")
         await websocket.close()
         return
 
     state["active_calls"] += 1
     state["calls_total"] += 1
     session = CallSession(mode="phone", caller_id=call_data.from_number or "")
-    logger.info(f"Call {session.call_id} started (Telnyx call {call_data.call_id})")
+    logger.info(f"Call {session.call_id} started ({transport_type.title()} call {call_data.call_id})")
     try:
-        await run_call(websocket, call_data, session)
+        await run_call(websocket, call_data, session, transport_type)
     except Exception as e:
         logger.exception(f"Call {session.call_id} crashed: {e}")
         session.end_reason = session.end_reason or f"error: {e}"
@@ -181,9 +207,20 @@ async def _after_call(session: CallSession):
         logger.exception(f"After-call processing failed for {session.call_id}: {e}")
 
 
-async def run_call(websocket: WebSocket, call_data, session: CallSession):
+def make_serializer(call_data, transport_type: str):
+    if transport_type == "twilio":
+        creds = bool(settings.twilio_account_sid and settings.twilio_auth_token and call_data.call_id)
+        # With credentials the bot hangs up through the Twilio API; without them
+        # it closes the stream and the TwiML <Hangup/> ends the call.
+        return TwilioFrameSerializer(
+            stream_sid=call_data.stream_id,
+            call_sid=call_data.call_id,
+            account_sid=settings.twilio_account_sid or None,
+            auth_token=settings.twilio_auth_token or None,
+            params=TwilioFrameSerializer.InputParams(auto_hang_up=creds),
+        )
     api_key = settings.telnyx_api_key or None
-    serializer = TelnyxFrameSerializer(
+    return TelnyxFrameSerializer(
         stream_id=call_data.stream_id,
         outbound_encoding=call_data.outbound_encoding or "PCMU",
         inbound_encoding="PCMU",
@@ -193,6 +230,10 @@ async def run_call(websocket: WebSocket, call_data, session: CallSession):
         # it closes the stream and the TeXML <Hangup/> ends the call.
         params=TelnyxFrameSerializer.InputParams(auto_hang_up=bool(api_key and call_data.call_id)),
     )
+
+
+async def run_call(websocket: WebSocket, call_data, session: CallSession, transport_type: str = "telnyx"):
+    serializer = make_serializer(call_data, transport_type)
     transport = FastAPIWebsocketTransport(
         websocket=websocket,
         params=FastAPIWebsocketParams(

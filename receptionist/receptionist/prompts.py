@@ -8,11 +8,12 @@
 from .settings import settings
 
 GREETING = (
-    "Thank you for calling Tinash Homecare Services. This is the Tinash virtual "
-    "assistant. Calls may be noted so our team can follow up. How can I help?"
+    "Hi, thanks for calling Tinash Homecare Services! I'm the Tinash virtual "
+    "assistant, and I'll take a few notes so our team can follow up with you. "
+    "How can I help today?"
 )
 
-FAREWELL = "Thank you for calling Tinash Homecare Services. Goodbye."
+FAREWELL = "Thanks so much for calling Tinash Homecare Services. Take care, goodbye."
 
 EMERGENCY_NOTE = (
     "The caller may be describing a medical emergency. Reply with exactly this and nothing else: "

@@ -492,7 +492,43 @@ def make_stt():
     )
 
 
+_kokoro_instance = None
+
+
+def _kokoro_model():
+    """Load the Kokoro model once per process; every call shares it."""
+    global _kokoro_instance
+    if _kokoro_instance is None:
+        from kokoro_onnx import Kokoro
+
+        t = time.perf_counter()
+        _kokoro_instance = Kokoro(
+            str(settings.kokoro_dir / "kokoro-v1.0.onnx"), str(settings.kokoro_dir / "voices-v1.0.bin")
+        )
+        logger.info(f"Loaded Kokoro voice model in {time.perf_counter() - t:.1f}s")
+    return _kokoro_instance
+
+
+def preload_tts() -> None:
+    if settings.tts_engine == "kokoro":
+        _kokoro_model()
+
+
 def make_tts():
+    if settings.tts_engine == "kokoro":
+        import pipecat.services.kokoro.tts as kokoro_tts
+
+        # Pipecat builds its own Kokoro in __init__ (a 300 MB load per call);
+        # hand it the shared one instead.
+        kokoro_tts.Kokoro = lambda *_args, **_kwargs: _kokoro_model()
+        return kokoro_tts.KokoroTTSService(
+            model_path=str(settings.kokoro_dir / "kokoro-v1.0.onnx"),
+            voices_path=str(settings.kokoro_dir / "voices-v1.0.bin"),
+            settings=kokoro_tts.KokoroTTSService.Settings(
+                voice=settings.kokoro_voice, speed=settings.kokoro_speed
+            ),
+        )
+
     from pipecat.services.piper.tts import PiperTTSService
 
     return PiperTTSService(

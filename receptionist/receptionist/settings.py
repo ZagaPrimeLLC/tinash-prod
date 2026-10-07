@@ -47,7 +47,11 @@ class Settings:
     whisper_beam_size: int = int(os.getenv("WHISPER_BEAM_SIZE", "5"))
     stt_debug_dir: str = os.getenv("STT_DEBUG_DIR", "")  # e.g. "stt-debug" to save every segment (testing only)
 
-    # Text to speech (Piper)
+    # Text to speech. kokoro sounds far more natural; piper is much faster on a Pi.
+    tts_engine: str = os.getenv("TTS_ENGINE", "kokoro").lower()
+    kokoro_voice: str = os.getenv("KOKORO_VOICE", "af_sarah")
+    kokoro_speed: float = float(os.getenv("KOKORO_SPEED", "1.0"))
+    kokoro_dir: Path = _path("KOKORO_DIR", ROOT / "models/kokoro")
     piper_voice: str = os.getenv("PIPER_VOICE", "en_US-amy-medium")
     piper_dir: Path = _path("PIPER_DIR", ROOT / "models/piper")
 
@@ -65,6 +69,9 @@ class Settings:
     # Telephony (Telnyx)
     public_ws_url: str = os.getenv("PUBLIC_WS_URL", "wss://voice.tinashhomecareservices.com/ws")
     telnyx_api_key: str = os.getenv("TELNYX_API_KEY", "")
+    # Twilio (alternative carrier). Optional: lets the bot hang up through the API.
+    twilio_account_sid: str = os.getenv("TWILIO_ACCOUNT_SID", "")
+    twilio_auth_token: str = os.getenv("TWILIO_AUTH_TOKEN", "")
     call_token: str = os.getenv("CALL_TOKEN", "")
     max_concurrent_calls: int = int(os.getenv("MAX_CONCURRENT_CALLS", "1"))
     max_call_seconds: int = int(os.getenv("MAX_CALL_SECONDS", "900"))
