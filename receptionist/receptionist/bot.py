@@ -101,6 +101,8 @@ class ClaudeBrain(FrameProcessor):
         super().__init__()
         self._ctl = ctl
         self._lock = asyncio.Lock()
+        self._current: asyncio.Task | None = None
+        self._reply_started = False
 
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
@@ -114,8 +116,15 @@ class ClaudeBrain(FrameProcessor):
         ):
             messages = frame.context.get_messages()
             if messages and messages[-1].get("role") == "user" and _text_of(messages[-1]).strip():
+                # The caller paused mid-sentence and kept talking before we said
+                # anything: drop the half-made reply and answer the whole thought.
+                # (Claude's history already holds the earlier words.)
+                if self._current and not self._current.done() and not self._reply_started:
+                    logger.info("Caller kept talking before the reply started; answering the full thought")
+                    await self.cancel_task(self._current)
+                self._reply_started = False
                 # Run the turn in a task so interruptions and audio keep flowing.
-                self.create_task(self._turn(frame, _text_of(messages[-1])), "claude-turn")
+                self._current = self.create_task(self._turn(frame, _text_of(messages[-1])), "claude-turn")
                 return
             if messages and ctl.claude is not None:
                 return  # a turn with no words: let the caller continue
@@ -140,12 +149,14 @@ class ClaudeBrain(FrameProcessor):
                     return
                 if not started:
                     started = True
+                    self._reply_started = True
                     await self.push_frame(LLMFullResponseStartFrame())
                 await self.push_frame(LLMTextFrame(piece))
 
             from .claude_brain import ClaudeUnavailable
 
             async def on_slow():
+                self._reply_started = True
                 ctl.session.add("assistant", "One moment, please.")
                 await self.push_frame(TTSSpeakFrame("One moment, please.", append_to_context=False))
 
