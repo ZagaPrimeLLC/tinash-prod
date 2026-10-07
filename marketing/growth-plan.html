@@ -72,8 +72,8 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
 
 <section>
   <div class="eyebrow">The short version</div>
-  <h2>Tinash is invisible online today, and that is the first thing to fix</h2>
-  <p>Searches for "Tinash Homecare Services" and for the office phone number return no Google Business Profile, no indexed website pages, no reviews and no directory listings. Families who hear the name cannot confirm Tinash exists, and families who search "home care near me" cannot find it. Competitors in Essex and Morris show 70 to 140 reviews each.</p>
+  <h2>Tinash is barely visible online, and that is the first thing to fix</h2>
+  <p>Tinash has a verified Google Business Profile (since March 2024) with 4 reviews, the newest from February 2025, none answered. Google has indexed 8 pages of the site, and the site got 18 clicks from Google search in the last three months. The profile still lists the old phone number, says "open 24 hours", and its service area includes "United States" and Sussex County instead of the six counties Tinash serves. Competitors in Essex and Morris show 70 to 140 reviews each.</p>
   <div class="callout">
     <h3>Three priorities, in this order</h3>
     <ol>
@@ -152,13 +152,18 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
     <div class="n">1</div>
     <div class="body">
       <h3>Foundation · 6 to 19 October</h3>
+      <div class="callout teal">
+        <h3>Done on 6 October</h3>
+        <ul>
+          <li>Search Console connected under the Tinash Google account, sitemap submitted, Google asked to recheck the 12 old WordPress addresses.</li>
+          <li>Main number switched to (973) 452-0185 across the site, chat assistant, WhatsApp link and flyer.</li>
+          <li>Home page headline now shows instantly on phones; old WordPress links forward in one step; http and www forward to the main address; every page has its own canonical address and Google business data; branded 404 page; images and videos cached; the six counties listed in the footer.</li>
+        </ul>
+      </div>
       <ul>
-        <li><span class="pill p-crit">Office</span> Create and verify the <strong>Google Business Profile</strong> as a service-area business covering the six counties. Primary category for the service with the most care hours; add photos of real staff, hours, services and the main phone number. Do the same in Bing Places.</li>
+        <li><span class="pill p-crit">Office</span> Fix the <strong>Google Business Profile</strong>: phone (973) 452-0185, real office hours, service area set to the six counties, and remove the unverified duplicate "Tinashhomecareservices". Reply to the 4 reviews with generic thanks. Add photos of real staff. Do the same in Bing Places.</li>
         <li><span class="pill p-crit">Office</span> Check Tinash's entry in <strong>DDD Provider Search</strong>: services, counties, languages, medical and behavioral capability. Updates go through DDD.ProviderHelpdesk@dhs.nj.gov.</li>
         <li><span class="pill p-crit">Office</span> Confirm the <strong>Health Care Service Firm registration</strong> renewal (registrations expired 30 September 2026) and send me the registration number to show on the site.</li>
-        <li><span class="pill p-us">Site</span> Verify <strong>Google Search Console</strong> and submit the sitemap; force HTTPS (the site still answers on plain http).</li>
-        <li><span class="pill p-us">Site</span> Make the home page load fast on phones: the headline is hidden until animations load (6.3 s on mobile today), images are not resized, and videos are not cached.</li>
-        <li><span class="pill p-us">Site</span> Fix canonical tags and share links on every page, add one-hop redirects for the old WordPress links, and add a branded 404 page.</li>
         <li><span class="pill p-us">Site</span> Add analytics with lead, call-click and WhatsApp-click tracking, kept off the forms so no health details reach Google.</li>
       </ul>
     </div>
@@ -254,6 +259,71 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
 </section>
 
 <section>
+  <div class="eyebrow">Never miss a call</div>
+  <h2>A Tinash phone receptionist, built in-house on a Raspberry Pi 5</h2>
+  <p>Only about half of calls to senior-care providers reach a person, and a missed call usually goes to the next agency on the list. Hosted AI receptionists such as Quo's agent charge a monthly fee per seat or per call. Tinash can run its own on a Raspberry Pi 5 in the office, using free, open-source software. The one cost that cannot be avoided is a phone line that can talk to it, about $1–3 a month for a number plus about half a cent to one cent per minute.</p>
+
+  <div class="grid3">
+    <div class="card">
+      <h3>What callers get</h3>
+      <ul>
+        <li>Answered on the first ring, after hours and when the office is busy</li>
+        <li>Told it is Tinash's virtual assistant and that the call is noted</li>
+        <li>Plain answers on services, counties, hours, DDD and GUIDE basics</li>
+        <li>Transfer to a person during office hours; 911 advice for emergencies</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>What it writes down</h3>
+      <ul>
+        <li>Caller name and callback number</li>
+        <li>Who needs care, which service, town or county</li>
+        <li>How it would be paid: private, DDD budget, Medicare</li>
+        <li>How urgent, best time to call back, a short summary</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Where notes go</h3>
+      <ul>
+        <li>Saved as an inquiry in the CRM inbox, marked "Phone assistant"</li>
+        <li>That triggers the same instant email to phane@ as website forms</li>
+        <li>Job seekers are logged as caregiver inquiries</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>How it is built</h3>
+  <div class="tablebox"><table>
+    <thead><tr><th>Part</th><th>Choice</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Phone line</td><td>A SIP number from a low-cost carrier (for example VoIP.ms or Telnyx)</td><td>(973) 452-0185 forwards to it when unanswered or after hours, so the main number never changes.</td></tr>
+      <tr><td>Call handling</td><td>Asterisk on the Pi</td><td>Answers the call, plays the greeting, transfers to a person, records nothing it does not need.</td></tr>
+      <tr><td>Conversation</td><td>Pipecat (open-source voice-agent framework)</td><td>Runs the turn-taking: listen, think, speak, and interrupt handling.</td></tr>
+      <tr><td>Hearing</td><td>faster-whisper (English) on the Pi</td><td>Speech to text, locally.</td></tr>
+      <tr><td>Thinking</td><td>A small local model (3B class, via Ollama) plus a fixed Tinash script</td><td>Follows the intake questions and answers only from an approved fact sheet. No medical advice.</td></tr>
+      <tr><td>Voice</td><td>Piper text-to-speech</td><td>Natural voice, runs fast on the Pi.</td></tr>
+      <tr><td>Hardware</td><td>Raspberry Pi 5 (8 GB, 16 GB better), NVMe SSD, active cooler, wired internet</td><td>A small battery backup keeps it up through short power cuts.</td></tr>
+    </tbody>
+  </table></div>
+
+  <div class="callout warn">
+    <h3>Limits to plan around</h3>
+    <ul>
+      <li><strong>Speed.</strong> A model small enough for the Pi takes about 1–3 seconds to answer. That is fine for a structured intake call and weaker for open conversation. If callers find it slow, the same setup can use a stronger model on an office computer, or a paid API covered by a HIPAA business associate agreement.</li>
+      <li><strong>Privacy.</strong> Calls contain health details. Keeping everything on the Pi helps: encrypted storage, transcripts deleted after 30 days, and only the summary sent to the CRM.</li>
+      <li><strong>Fallback.</strong> If the Pi is off or the internet is down, the carrier sends calls to voicemail or a staff cell phone.</li>
+    </ul>
+  </div>
+
+  <h3>Steps</h3>
+  <ol>
+    <li><strong>Build and test (2 weeks, from late October).</strong> Write the intake script and fact sheet with the office, prototype on a laptop with a test number, then move it to the Pi.</li>
+    <li><strong>After hours only (2 weeks).</strong> Forward calls only outside office hours. Review every summary with the office and tune the script.</li>
+    <li><strong>Overflow (from early December).</strong> Also answer daytime calls nobody picks up within 4 rings.</li>
+  </ol>
+</section>
+
+<section>
   <div class="eyebrow">Guardrails</div>
   <h2>Compliance points that shape the marketing</h2>
   <ul>
@@ -270,9 +340,9 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
   <div class="tablebox"><table>
     <thead><tr><th>Measure</th><th>Today</th><th>Target by 4 Jan 2027</th></tr></thead>
     <tbody>
-      <tr><td>Google Business Profile</td><td class="num">None</td><td>Verified, with photos, posts every week</td></tr>
-      <tr><td>Google reviews</td><td class="num">0</td><td class="num">15+</td></tr>
-      <tr><td>Pages indexed by Google</td><td class="num">~0</td><td class="num">30+</td></tr>
+      <tr><td>Google Business Profile</td><td>Verified, outdated details</td><td>Correct details, photos, posts every week</td></tr>
+      <tr><td>Google reviews</td><td class="num">4</td><td class="num">20+</td></tr>
+      <tr><td>Pages indexed by Google</td><td class="num">8</td><td class="num">30+</td></tr>
       <tr><td>Directory listings with matching details</td><td class="num">0</td><td class="num">10+</td></tr>
       <tr><td>Website + phone inquiries a month</td><td>Not tracked</td><td>Tracked by source, rising month on month</td></tr>
       <tr><td>Time to first callback</td><td>Not tracked</td><td>Under 15 minutes in office hours</td></tr>
@@ -286,13 +356,13 @@ hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
   <div class="eyebrow">Needed from Tinash</div>
   <h2>Decisions and details before we start</h2>
   <ol>
-    <li>Which phone number is the main line? The site shows (973) 636-8328 and the GUIDE page shows (973) 452-0185.</li>
     <li>The office street address, or confirmation that Tinash serves clients only at their homes (a service-area business with the address hidden).</li>
     <li>Who answers website leads and calls, and the callback promise (for example, within 15 minutes in office hours).</li>
     <li>Languages spoken by staff, and whether Tinash supports clients with medical or behavioral needs (for DDD Provider Search).</li>
     <li>Monthly ad budget approval ($750 recommended, from late November).</li>
     <li>Someone at Tinash to own reviews, referral visits and filming one short video a week.</li>
     <li>PocketRN's approval process for GUIDE materials.</li>
+    <li>Who provides the phone line for (973) 452-0185, so call forwarding to the receptionist can be set up.</li>
   </ol>
 </section>
 
