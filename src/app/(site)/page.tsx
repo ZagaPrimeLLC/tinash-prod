@@ -269,7 +269,7 @@ export default function Home() {
               {site.phone}
             </a>
             <p className="mt-2 text-sm text-mist-100/60">
-              Office hours Mon–Fri 9–7, Sat–Sun 10–2 · Care available around the clock.
+              Office hours Mon–Fri 9–5, Sat–Sun 11–2 · Care available around the clock.
             </p>
           </Reveal>
           <Reveal delay={0.1} className="rounded-3xl bg-mist-50 p-8 shadow-2xl">

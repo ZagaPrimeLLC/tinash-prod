@@ -70,7 +70,7 @@ const jsonLd = {
         name: `${county}, NJ`,
       })),
       address: { "@type": "PostalAddress", addressRegion: "NJ", addressCountry: "US" },
-      openingHours: ["Mo-Fr 09:00-19:00", "Sa-Su 10:00-14:00"],
+      openingHours: ["Mo-Fr 09:00-17:00", "Sa-Su 11:00-14:00"],
       sameAs: site.social.map((s) => s.href),
       description:
         "In-home care agency serving New Jersey families: skilled nursing, companion care, live-in and 24/7 care, respite care, and NJ DDD (Division of Developmental Disabilities) services.",

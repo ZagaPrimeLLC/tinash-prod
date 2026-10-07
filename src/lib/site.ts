@@ -1,8 +1,8 @@
 import { servicesByLine } from "@/lib/services";
 
 // Central site configuration — edit here, reflected everywhere.
-// Contact details, hours and socials match the original WordPress site
-// (tinashhomecareservices.com, checked Oct 2026).
+// Socials match the original WordPress site (tinashhomecareservices.com,
+// checked Oct 2026). Phone and hours match the Google Business Profile.
 export const site = {
   name: "Tinash Homecare Services",
   legalName: "Tinash Homecare Services LLC",
@@ -17,8 +17,8 @@ export const site = {
   whatsappHref: "https://wa.me/19734520185",
   email: "info@tinashhomecareservices.com",
   hours: [
-    { days: "Mon–Fri", time: "9:00 AM – 7:00 PM" },
-    { days: "Sat–Sun", time: "10:00 AM – 2:00 PM" },
+    { days: "Mon–Fri", time: "9:00 AM – 5:00 PM" },
+    { days: "Sat–Sun", time: "11:00 AM – 2:00 PM" },
   ],
   // Free consultation booking (contact page + chatbot). Tinash's real
   // availability has not been confirmed yet.
