@@ -1,0 +1,8 @@
+# Raspberry Pi OS 64-bit (and Apple Silicon Macs): pip install -r requirements.txt
+# Intel Macs: use scripts/install_mac.sh instead (onnxruntime/numba no longer ship
+# Intel-Mac wheels for the versions Pipecat asks for).
+pipecat-ai[silero,whisper,piper,websocket]==1.12.0
+uvicorn>=0.32,<1
+httpx>=0.27,<1
+websockets>=13.1
+pytest>=8

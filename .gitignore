@@ -51,3 +51,11 @@ next-env.d.ts
 .vscode/
 supabase/.temp/
 .DS_Store
+
+# phone receptionist (local models, call data, secrets)
+receptionist/.venv/
+receptionist/models/
+receptionist/data/
+receptionist/.env
+receptionist/**/__pycache__/
+receptionist/.pytest_cache/

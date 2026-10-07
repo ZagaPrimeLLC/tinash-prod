@@ -1,0 +1,10 @@
+# /etc/cloudflared/config.yml on the Raspberry Pi (see README step 3).
+# Replace TUNNEL_ID with the id printed by `cloudflared tunnel create tinash-voice`.
+tunnel: TUNNEL_ID
+credentials-file: /etc/cloudflared/TUNNEL_ID.json
+
+ingress:
+  # Telnyx webhook (HTTPS) and call audio (WebSocket) both go to the local server.
+  - hostname: voice.tinashhomecareservices.com
+    service: http://127.0.0.1:8765
+  - service: http_status:404
