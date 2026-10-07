@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Accessibility Statement" };
+export const metadata: Metadata = pageMetadata("/legal/accessibility", {
+  title: "Accessibility Statement",
+  description:
+    "Our commitment to an accessible website (WCAG 2.1 AA), the features we support, and how to request help or report an accessibility barrier.",
+});
 
 export default function Accessibility() {
   return (

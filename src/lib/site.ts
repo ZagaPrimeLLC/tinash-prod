@@ -12,17 +12,14 @@ export const site = {
   crmUrl: process.env.NEXT_PUBLIC_CRM_URL ?? "https://crm.tinashhomecareservices.com",
   logo: "/brand/logo.png",
   logoWhite: "/brand/logo-white.png",
-  phone: "+1 (973) 636-8328",
-  phoneHref: "tel:+19736368328",
-  whatsappHref: "https://wa.me/19736368328",
+  phone: "+1 (973) 452-0185",
+  phoneHref: "tel:+19734520185",
+  whatsappHref: "https://wa.me/19734520185",
   email: "info@tinashhomecareservices.com",
   hours: [
     { days: "Mon–Fri", time: "9:00 AM – 7:00 PM" },
     { days: "Sat–Sun", time: "10:00 AM – 2:00 PM" },
   ],
-  // Number given in the GUIDE program copy doc — TODO: confirm vs. main line.
-  guidePhone: "(973) 452-0185",
-  guidePhoneHref: "tel:+19734520185",
   // Free consultation booking (contact page + chatbot). Tinash's real
   // availability has not been confirmed yet.
   // TODO(confirm): consultation days/hours with the Tinash office.

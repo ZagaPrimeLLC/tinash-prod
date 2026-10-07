@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Terms of Use" };
+export const metadata: Metadata = pageMetadata("/legal/terms", {
+  title: "Terms of Use",
+  description:
+    "The terms that apply when you use the Tinash Homecare Services website, including content, forms, and links to other sites.",
+});
 
 export default function Terms() {
   return (

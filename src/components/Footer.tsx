@@ -18,10 +18,11 @@ export default function Footer() {
       <div className="relative mx-auto grid max-w-7xl gap-10 px-6 py-14 md:grid-cols-4">
         <div>
           <Image
-            src="/brand/logo-full-white.png"
+            src="/brand/logo-full-white.webp"
             alt={site.name}
-            width={1200}
-            height={455}
+            width={480}
+            height={182}
+            unoptimized
             className="h-auto w-60"
           />
           <p className="mt-3 text-sm leading-6 text-mist-100/70">
@@ -103,12 +104,16 @@ export default function Footer() {
                 </a>
               ))}
             </li>
-            <li className="pt-2 text-mist-100/70">
-              Serving {site.serviceArea.slice(0, 3).join(", ")} and surrounding
-              NJ communities. Care available around the clock.
-            </li>
           </ul>
         </div>
+      </div>
+      <div className="relative mx-auto max-w-7xl px-6 pb-8">
+        <p className="text-sm leading-6 text-mist-100/80">
+          <span className="font-semibold uppercase tracking-wider text-teal-400">
+            Areas we serve:
+          </span>{" "}
+          {site.serviceArea.join(" · ")}, New Jersey. Care available around the clock.
+        </p>
       </div>
       <div className="border-t border-white/10 px-6 py-5">
         <div className="mx-auto flex max-w-7xl flex-wrap items-start justify-between gap-x-6 gap-y-2">

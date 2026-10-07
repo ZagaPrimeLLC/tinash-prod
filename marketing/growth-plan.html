@@ -1,0 +1,325 @@
+<title>Tinash Growth Plan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* Layout: one reading column, wide tables scroll inside their own box; Tinash plum + teal brand */
+:root {
+  --bg: #fbfafd; --surface: #ffffff; --fg: #1c0f36; --muted: #5b4d73; --line: #e4dcef;
+  --plum: #583092; --plum-soft: #f3eefa; --teal: #127572; --teal-soft: #e3f6f5;
+  --warn: #9a5a00; --warn-soft: #fff4e2; --crit: #a3213a; --crit-soft: #fdecef;
+  --display: Montserrat, "Segoe UI", Arial, sans-serif;
+  --body: Inter, "Segoe UI", Arial, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #140b26; --surface: #1d1233; --fg: #efe9f8; --muted: #b6a9cc; --line: #34264f;
+  --plum: #c3a6ef; --plum-soft: #2a1b46; --teal: #6fd6d1; --teal-soft: #12302f;
+  --warn: #f2b45a; --warn-soft: #33250f; --crit: #f08c9e; --crit-soft: #3a1620; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #140b26; --surface: #1d1233; --fg: #efe9f8; --muted: #b6a9cc; --line: #34264f;
+  --plum: #c3a6ef; --plum-soft: #2a1b46; --teal: #6fd6d1; --teal-soft: #12302f;
+  --warn: #f2b45a; --warn-soft: #33250f; --crit: #f08c9e; --crit-soft: #3a1620; color-scheme: dark }
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font: 15px/1.6 var(--body); }
+.wrap { max-width: 860px; margin: 0 auto; padding-inline: 20px; padding-block: 40px 80px; display: grid; gap: 44px; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.2; text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(28px, 5vw, 40px); font-weight: 800; }
+h2 { font-size: 22px; font-weight: 800; }
+h3 { font-size: 16px; font-weight: 700; }
+p { margin: 0; max-width: 68ch; }
+a { color: var(--plum); }
+section { display: grid; gap: 16px; min-width: 0; }
+.eyebrow { font: 700 12px var(--display); letter-spacing: .14em; text-transform: uppercase; color: var(--teal); }
+.lede { font-size: 17px; color: var(--muted); }
+.meta { font-size: 13px; color: var(--muted); }
+ul, ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+li { max-width: 68ch; }
+.callout { background: var(--plum-soft); border-radius: 12px; padding: 18px 20px; display: grid; gap: 10px; }
+.callout.teal { background: var(--teal-soft); }
+.callout.warn { background: var(--warn-soft); }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.card .who { font-size: 13px; color: var(--muted); }
+.tablebox { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 14px; min-width: 620px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 700 12px var(--display); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); background: var(--plum-soft); }
+tr:last-child td { border-bottom: 0; }
+td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pill { display: inline-block; font: 700 11px var(--display); letter-spacing: .05em; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+.p-crit { background: var(--crit-soft); color: var(--crit); }
+.p-high { background: var(--warn-soft); color: var(--warn); }
+.p-med { background: var(--teal-soft); color: var(--teal); }
+.p-us { background: var(--plum-soft); color: var(--plum); }
+.phase { display: grid; grid-template-columns: 54px 1fr; gap: 16px; }
+.phase .n { font: 800 26px var(--display); color: var(--plum); font-variant-numeric: tabular-nums; }
+.phase .body { display: grid; gap: 10px; min-width: 0; padding-bottom: 22px; border-bottom: 1px solid var(--line); }
+.phase:last-child .body { border-bottom: 0; }
+.owner { font-size: 12px; font-weight: 600; color: var(--muted); }
+.sources { font-size: 13px; color: var(--muted); }
+.sources li { word-break: break-word; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 0; }
+</style>
+
+<div class="wrap">
+
+<header style="display:grid;gap:14px">
+  <div class="eyebrow">Tinash Homecare Services · Growth plan</div>
+  <h1>Getting found, chosen and called back in New Jersey</h1>
+  <p class="lede">A 90-day plan for SEO, Google ranking, social media, publicity and a small ad budget. It is built from research on how NJ home care and DDD agencies actually win clients, plus an audit of tinashhomecareservices.com.</p>
+  <p class="meta">Prepared 6 October 2026 · Covers 6 Oct 2026 to 4 Jan 2027 · Counties: Essex, Union, Middlesex, Somerset, Morris, Hudson (plus Monmouth for hiring)</p>
+</header>
+
+<section>
+  <div class="eyebrow">The short version</div>
+  <h2>Tinash is invisible online today, and that is the first thing to fix</h2>
+  <p>Searches for "Tinash Homecare Services" and for the office phone number return no Google Business Profile, no indexed website pages, no reviews and no directory listings. Families who hear the name cannot confirm Tinash exists, and families who search "home care near me" cannot find it. Competitors in Essex and Morris show 70 to 140 reviews each.</p>
+  <div class="callout">
+    <h3>Three priorities, in this order</h3>
+    <ol>
+      <li><strong>Be findable and trusted (weeks 1–2).</strong> Google Business Profile, Search Console, the NJ DDD Provider Search listing, consistent name/address/phone everywhere, and fixes to the site's speed and setup.</li>
+      <li><strong>Build the two referral engines (weeks 3–8).</strong> Reviews from happy families, and relationships with the people who send clients: DDD support coordinators, hospital and rehab discharge planners, county aging offices.</li>
+      <li><strong>Add reach (weeks 6–13).</strong> Town and county pages, a steady content and social rhythm, local press, and a small Google Search ads test once tracking works.</li>
+    </ol>
+  </div>
+  <p>Ads come last on purpose. Paid clicks for in-home care cost about $11 each, and sending them to a business with no reviews and no Google listing wastes most of the money.</p>
+</section>
+
+<section>
+  <div class="eyebrow">What the research says</div>
+  <h2>Where NJ home care clients come from</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>Source</th><th>What we found</th><th>What it means for Tinash</th></tr></thead>
+    <tbody>
+      <tr><td>Families and past clients</td><td>The #1 source of new clients "by a considerable margin" (Home Care Pulse, 700+ agencies). The top reason families pick an agency is a recommendation.</td><td>Every happy family should be asked for a review and a referral. This costs nothing.</td></tr>
+      <tr><td>Google search and Maps</td><td>Agencies using Google listings got over 20% of revenue from them while few agencies bothered. Organic search calls convert best of any channel (45%, Invoca 2026).</td><td>The Google Business Profile is the single most valuable free asset Tinash does not have yet.</td></tr>
+      <tr><td>Professional referrers</td><td>Discharge planners, rehab hospitals, home health agencies, hospices, Area Agencies on Aging and case managers are the referral sources agencies cite most.</td><td>A short referral kit and regular visits beat any ad for steady volume.</td></tr>
+      <tr><td>DDD support coordinators</td><td>After DDD eligibility, each family gets a support coordinator who helps narrow the provider list. Coordinators cannot choose for the family, but they shape the shortlist.</td><td>For DDD services, support coordination agencies are the referral relationship that matters most.</td></tr>
+      <tr><td>DDD Provider Search</td><td>The state's directory lets families filter by service, county, language and medical/behavioral ability. Providers must keep their own entry current.</td><td>Make sure Tinash's entry is complete, especially languages and capabilities.</td></tr>
+      <tr><td>Lead sites (A Place for Mom, Caring.com, Care.com)</td><td>Leads cost roughly $75–320 each and about 1 in 10 closes. Caring.com reviews and "Caring Stars" badges are what competitors display.</td><td>Take the free Caring.com listing now. Skip paid lead programs until reviews exist.</td></tr>
+      <tr><td>Google Search ads</td><td>Median senior-care CPC about $7.50, in-home care keywords about $11.50. Cost per lead $40–300, higher in franchise-heavy markets like north NJ.</td><td>A $750/month test buys about 65–100 clicks and roughly 5–10 inquiries. Worth testing once the basics are in place.</td></tr>
+    </tbody>
+  </table></div>
+  <div class="callout warn">
+    <h3>Speed of response decides a lot of this</h3>
+    <p>Across senior care, only 53% of inbound calls reach a person, and 60% of providers never ask the caller to book an assessment (Invoca 2026). Leads contacted within 5 minutes are far more likely to convert than those called back after 30. Every website lead now emails phane@ instantly; the office needs a rule for who calls back and how fast.</p>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Three audiences, three paths</div>
+  <h2>Market each service line where its families actually look</h2>
+  <div class="grid3">
+    <div class="card">
+      <h3>Private-pay home care</h3>
+      <p class="who">Adult children 45–65 arranging care for a parent, and seniors themselves.</p>
+      <ul>
+        <li>Google Maps and search (Business Profile, reviews, county pages)</li>
+        <li>Discharge planners, rehabs, senior centers, elder law attorneys</li>
+        <li>Facebook and YouTube (74% and 85% of 50–64 year olds use them)</li>
+        <li>Google Search ads in month 2</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>NJ DDD services</h3>
+      <p class="who">Families of adults 21+ on the Community Care or Supports Program.</p>
+      <ul>
+        <li>Support coordination agencies (visits, a one-page provider sheet)</li>
+        <li>DDD Provider Search, NJ 211, county ResourceNet directories</li>
+        <li>Transition fairs, SPAN, Arc of NJ chapters, school districts</li>
+        <li>Plain-language guides on the website (budgets, IS vs CBS)</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>GUIDE dementia program</h3>
+      <p class="who">Families of someone with dementia on traditional Medicare.</p>
+      <ul>
+        <li>Physicians, memory clinics, Alzheimer's Association NJ support groups</li>
+        <li>A clear eligibility checker on the GUIDE page</li>
+        <li>Wording approved by PocketRN (the program participant)</li>
+        <li>November is Alzheimer's Awareness Month: the natural launch</li>
+      </ul>
+    </div>
+  </div>
+  <p>Comfort Keepers of Montclair already markets a PocketRN GUIDE partnership across Essex, Union and Morris, so Tinash will not be the only one. Tinash can stand out by being clearer about who qualifies (traditional Medicare Parts A and B only, not Medicare Advantage) and by its DDD experience.</p>
+</section>
+
+<section>
+  <div class="eyebrow">The 90 days</div>
+  <h2>What happens, when, and who does it</h2>
+
+  <div class="phase">
+    <div class="n">1</div>
+    <div class="body">
+      <h3>Foundation · 6 to 19 October</h3>
+      <ul>
+        <li><span class="pill p-crit">Office</span> Create and verify the <strong>Google Business Profile</strong> as a service-area business covering the six counties. Primary category for the service with the most care hours; add photos of real staff, hours, services and the main phone number. Do the same in Bing Places.</li>
+        <li><span class="pill p-crit">Office</span> Check Tinash's entry in <strong>DDD Provider Search</strong>: services, counties, languages, medical and behavioral capability. Updates go through DDD.ProviderHelpdesk@dhs.nj.gov.</li>
+        <li><span class="pill p-crit">Office</span> Confirm the <strong>Health Care Service Firm registration</strong> renewal (registrations expired 30 September 2026) and send me the registration number to show on the site.</li>
+        <li><span class="pill p-us">Site</span> Verify <strong>Google Search Console</strong> and submit the sitemap; force HTTPS (the site still answers on plain http).</li>
+        <li><span class="pill p-us">Site</span> Make the home page load fast on phones: the headline is hidden until animations load (6.3 s on mobile today), images are not resized, and videos are not cached.</li>
+        <li><span class="pill p-us">Site</span> Fix canonical tags and share links on every page, add one-hop redirects for the old WordPress links, and add a branded 404 page.</li>
+        <li><span class="pill p-us">Site</span> Add analytics with lead, call-click and WhatsApp-click tracking, kept off the forms so no health details reach Google.</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="n">2</div>
+    <div class="body">
+      <h3>Referral engines and local pages · 20 October to 16 November</h3>
+      <ul>
+        <li><span class="pill p-high">Office</span> <strong>Reviews</strong>: ask every satisfied family (with their OK) for a Google review, using a short link and a printed card. Target 15 reviews by early January. Replies stay generic and never confirm someone is a client.</li>
+        <li><span class="pill p-high">Office</span> <strong>Referral visits</strong>: 4 a week. Support coordination agencies in the six counties, two hospital discharge teams, rehab centres, county aging offices (Essex 973-395-8392, Union 908-527-4870, Middlesex 732-745-3295).</li>
+        <li><span class="pill p-us">Site</span> Six <strong>county pages</strong> (for example "Home Care in Essex County, NJ") with real towns, services and how to start. A visible "Areas we serve" block on every page.</li>
+        <li><span class="pill p-us">Site</span> Expand each <strong>service page</strong> from about 300 to 800+ words: who qualifies, how it is paid (private, DDD budget, Medicare), the steps, and FAQs. Put the keyword in each heading.</li>
+        <li><span class="pill p-us">Site</span> Richer Google data on every page: services, FAQs, breadcrumbs, and a complete job posting.</li>
+        <li><span class="pill p-med">Both</span> <strong>Directories</strong> with identical name, phone and service area: Caring.com, Yelp, BBB, NJ 211, county ResourceNet sites, Care.com business, Nextdoor business page, LinkedIn company page.</li>
+        <li><span class="pill p-med">Both</span> A one-page <strong>referral sheet</strong> for coordinators and discharge planners (services, counties, how to refer, response time).</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="phase">
+    <div class="n">3</div>
+    <div class="body">
+      <h3>Reach · 17 November to 4 January</h3>
+      <ul>
+        <li><span class="pill p-us">Site</span> A <strong>Resources</strong> section, starting with 6 guides (list below), each linked to the matching service and county pages.</li>
+        <li><span class="pill p-med">Both</span> <strong>Social rhythm</strong> starts: 3 posts a week on Facebook, 1 short video a week reused on YouTube Shorts and Instagram, 2 posts a month on LinkedIn for referral partners.</li>
+        <li><span class="pill p-med">Both</span> <strong>Publicity</strong>: a GUIDE program story to TAPinto and Patch for each county, offered as a family resource. Join the transition fair circuit for spring 2027.</li>
+        <li><span class="pill p-high">Office</span> <strong>Google Search ads test</strong>: $750 a month, started once tracking and at least 5 reviews are in place (details below).</li>
+        <li><span class="pill p-med">Both</span> Monthly review of results and adjust.</li>
+      </ul>
+    </div>
+  </div>
+  <p class="meta">Site = work I build into the website. Office = needs the Tinash team (logins, phone calls, visits, money). Both = I prepare it, the office approves or sends it.</p>
+</section>
+
+<section>
+  <div class="eyebrow">Content</div>
+  <h2>What to publish</h2>
+  <p>Families and support coordinators search for plain answers. AI assistants such as ChatGPT and Google's AI Overviews now send senior-care calls too, and they quote pages that answer questions directly: who qualifies, what it costs, which areas are served, how fast care can start.</p>
+  <div class="tablebox"><table>
+    <thead><tr><th>Guide</th><th>Who it is for</th><th>Links to</th></tr></thead>
+    <tbody>
+      <tr><td>How to pay for home care in New Jersey</td><td>Private-pay families</td><td>Home care services, county pages</td></tr>
+      <tr><td>Individual Supports vs Community-Based Supports</td><td>DDD families, coordinators</td><td>DDD services</td></tr>
+      <tr><td>Using your DDD budget: a step-by-step guide</td><td>DDD families turning 21</td><td>DDD services, contact</td></tr>
+      <tr><td>Medicare GUIDE: who qualifies and what it covers</td><td>Dementia caregivers</td><td>GUIDE page</td></tr>
+      <tr><td>Signs a parent needs help at home</td><td>Adult children</td><td>Senior care, free assessment</td></tr>
+      <tr><td>Respite care: getting a break as a family caregiver</td><td>Family caregivers</td><td>Respite, DDD respite</td></tr>
+    </tbody>
+  </table></div>
+
+  <h3>Social calendar themes</h3>
+  <div class="tablebox"><table>
+    <thead><tr><th>Month</th><th>Theme</th><th>Example posts</th></tr></thead>
+    <tbody>
+      <tr><td>October</td><td>Meet Tinash</td><td>Caregiver spotlights, "what a first assessment looks like", service area map</td></tr>
+      <tr><td>November</td><td>Family Caregivers Month · Alzheimer's Awareness Month · Home Care Month</td><td>GUIDE program launch, caregiver burnout tips, respite explainer, thank-you posts for staff</td></tr>
+      <tr><td>December</td><td>Holidays with aging parents</td><td>Signs to watch for when visiting family, safe-home checklist, hiring DSPs for the new year</td></tr>
+    </tbody>
+  </table></div>
+  <ul>
+    <li><strong>Facebook</strong> is the main channel for families (74% of 50–64 year olds use it). Local community groups matter as much as the page.</li>
+    <li><strong>YouTube and short video</strong>: one 30–60 second video a week, filmed on a phone. Faces of real staff build more trust than stock photos.</li>
+    <li><strong>LinkedIn</strong> is for referral partners: coordinators, discharge planners, social workers.</li>
+    <li><strong>TikTok and Instagram</strong> are best used for caregiver and DSP recruiting rather than client marketing.</li>
+    <li>No client photos, names or stories without written consent.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="eyebrow">Ads</div>
+  <h2>Recommendation: a small Google Search test, nothing else yet</h2>
+  <div class="grid3">
+    <div class="card">
+      <h3>Google Search</h3>
+      <p class="who">Start in late November · $750 / month</p>
+      <p>Keywords such as "home care Montclair NJ", "in-home senior care Essex County", "DDD respite provider NJ", "dementia care at home NJ". Calls and assessments only. Expect about 65–100 clicks and 5–10 inquiries a month to start.</p>
+    </div>
+    <div class="card">
+      <h3>Google Local Services Ads</h3>
+      <p class="who">Check eligibility first</p>
+      <p>Pay per lead rather than per click, and shows a "Google screened" badge. It is unconfirmed whether home care qualifies in NJ, so check in the sign-up tool before spending.</p>
+    </div>
+    <div class="card">
+      <h3>Meta (Facebook / Instagram)</h3>
+      <p class="who">Recruiting only, for now</p>
+      <p>Health advertisers face strict targeting limits on Meta. Use it for DSP and caregiver job ads (Employment category), and boost the best organic family posts lightly.</p>
+    </div>
+  </div>
+  <p>Rules to follow: no remarketing or audiences based on health conditions or disability (Google bans it, including targeting caregivers of people with a condition), and no ad tracking pixels on intake forms or the CRM. One new private-pay client can cover months of this budget, so the test pays off if it converts even one or two families a month.</p>
+</section>
+
+<section>
+  <div class="eyebrow">Guardrails</div>
+  <h2>Compliance points that shape the marketing</h2>
+  <ul>
+    <li><strong>Reviews and HIPAA.</strong> A NJ practice paid $30,000 for revealing patient details in review replies. Never confirm someone is a client in a reply. Ask for reviews only from families who agree.</li>
+    <li><strong>GUIDE wording.</strong> Only traditional Medicare (Parts A and B, Medicare primary) qualifies, not Medicare Advantage, PACE, hospice or long-term nursing home residents. No gifts or incentives to enroll. Families keep free choice of providers. Have PocketRN approve flyers and web copy, and do not use the Medicare logo.</li>
+    <li><strong>DDD.</strong> Present Tinash as an option for the family to choose. Support coordinators help narrow the list but do not choose for the family.</li>
+    <li><strong>Licensing.</strong> Show the Health Care Service Firm registration number on the site once renewed.</li>
+  </ul>
+</section>
+
+<section>
+  <div class="eyebrow">Measuring it</div>
+  <h2>Targets for early January</h2>
+  <div class="tablebox"><table>
+    <thead><tr><th>Measure</th><th>Today</th><th>Target by 4 Jan 2027</th></tr></thead>
+    <tbody>
+      <tr><td>Google Business Profile</td><td class="num">None</td><td>Verified, with photos, posts every week</td></tr>
+      <tr><td>Google reviews</td><td class="num">0</td><td class="num">15+</td></tr>
+      <tr><td>Pages indexed by Google</td><td class="num">~0</td><td class="num">30+</td></tr>
+      <tr><td>Directory listings with matching details</td><td class="num">0</td><td class="num">10+</td></tr>
+      <tr><td>Website + phone inquiries a month</td><td>Not tracked</td><td>Tracked by source, rising month on month</td></tr>
+      <tr><td>Time to first callback</td><td>Not tracked</td><td>Under 15 minutes in office hours</td></tr>
+      <tr><td>Referral partner visits</td><td class="num">0</td><td class="num">40 (about 4 a week)</td></tr>
+      <tr><td>Home page load on phones (LCP)</td><td class="num">6.3 s</td><td class="num">Under 2.5 s</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section>
+  <div class="eyebrow">Needed from Tinash</div>
+  <h2>Decisions and details before we start</h2>
+  <ol>
+    <li>Which phone number is the main line? The site shows (973) 636-8328 and the GUIDE page shows (973) 452-0185.</li>
+    <li>The office street address, or confirmation that Tinash serves clients only at their homes (a service-area business with the address hidden).</li>
+    <li>Who answers website leads and calls, and the callback promise (for example, within 15 minutes in office hours).</li>
+    <li>Languages spoken by staff, and whether Tinash supports clients with medical or behavioral needs (for DDD Provider Search).</li>
+    <li>Monthly ad budget approval ($750 recommended, from late November).</li>
+    <li>Someone at Tinash to own reviews, referral visits and filming one short video a week.</li>
+    <li>PocketRN's approval process for GUIDE materials.</li>
+  </ol>
+</section>
+
+<hr>
+
+<section class="sources">
+  <h3>Sources</h3>
+  <ul>
+    <li>Home Care Pulse referral study via Home Health Care News: https://homehealthcarenews.com/2018/04/word-of-mouth-still-best-referral-source-for-home-care-providers/</li>
+    <li>Client acquisition cost ($845 in 2024): https://homehealthcarenews.com/2025/07/inside-the-data-revenue-staffing-wins-and-challenges-shape-home-based-care-strategy/</li>
+    <li>Invoca senior care conversion benchmarks 2026: https://invoca.com/reports/the-invoca-senior-care-lead-conversion-benchmarks-report-2026</li>
+    <li>NJ DDD support coordination and provider selection: https://www.nj.gov/humanservices/ddd/individuals/community/care/</li>
+    <li>DDD Provider Search guide: https://nj.gov/humanservices/ddd/assets/documents/providers/provider-search-quick-guide.pdf</li>
+    <li>CMS GUIDE model FAQs and RFA: https://www.cms.gov/priorities/innovation/guide/faqs · https://www.cms.gov/files/document/guide-rfa.pdf</li>
+    <li>Comfort Keepers Montclair GUIDE page: https://www.comfortkeepers.com/offices/new-jersey/montclair/resources/resources/north-jersey-families-caring-for-a-loved-one-with-dementia-just-got-a-powerful-new-resource/</li>
+    <li>Caring.com Essex County providers: https://www.caring.com/senior-care/in-home-care/new-jersey/essex-county</li>
+    <li>HIPAA and online reviews: https://nixonpeabody.com/insights/articles/2023/07/13/hipaa-regulated-entities-must-use-caution-responding-to-online-reviews</li>
+    <li>NJ Health Care Service Firm registration: https://njconsumeraffairs.gov/hcservice</li>
+    <li>NJ county aging offices: https://nj211.org/area-agencies-on-aging</li>
+    <li>Senior services PPC costs: https://www.mbadv.agency/ppc-industry-statistics/senior-services-ppc-statistics</li>
+    <li>Google and Meta health ad restrictions: https://www.accelerateddigitalmedia.com/insights/guide-to-social-media-health-ad-restrictions-2026/</li>
+    <li>HHS tracking guidance ruling: https://www.aha.org/news/headline/2024-08-29-hhs-will-not-appeal-aha-court-victory-online-tracking-case</li>
+    <li>Pew social media use by age: https://www.pewresearch.org/internet/fact-sheet/social-media/</li>
+    <li>Google Business Profile Q&amp;A shutdown: https://ppc.land/google-discontinues-business-profile-q-a-api-effective-november-3/</li>
+    <li>Alzheimer's Association Greater NJ support: https://www.alz.org/nj/support</li>
+  </ul>
+  <p>Several industry benchmarks are from 2017–2020 and cost-per-lead figures come mostly from marketing vendors, so treat them as ranges, not promises.</p>
+</section>
+
+</div>

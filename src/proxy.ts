@@ -32,9 +32,15 @@ export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get('host') ?? '';
 
-  // One canonical site: www.* permanently redirects to the bare domain.
-  if (host.toLowerCase().startsWith('www.')) {
-    return NextResponse.redirect(new URL(pathname + request.nextUrl.search, PUBLIC_ORIGIN), 308);
+  // One canonical URL per page, in one hop: www.* goes to the bare domain and
+  // a trailing slash is dropped (next.config.ts sets skipTrailingSlashRedirect
+  // so old WordPress "/path/" redirects run first). API routes are left alone.
+  const isWww = host.toLowerCase().startsWith('www.');
+  const hasSlash = pathname !== '/' && pathname.endsWith('/') && !pathname.startsWith('/api/');
+  if (isWww || hasSlash) {
+    const path = hasSlash ? pathname.replace(/\/+$/, '') || '/' : pathname;
+    const origin = isWww ? PUBLIC_ORIGIN : request.nextUrl.origin;
+    return NextResponse.redirect(new URL(path + request.nextUrl.search, origin), 308);
   }
 
   const kind = hostKind(host);

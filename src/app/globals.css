@@ -120,12 +120,29 @@ body {
   animation: kenburns 24s ease-in-out infinite alternate;
 }
 
+/* Home hero entrance. Transform only, never opacity: the text is visible
+   from first paint (no JS needed, no LCP delay). --i staggers the items. */
+@keyframes hero-rise {
+  from {
+    transform: translateY(18px);
+  }
+  to {
+    transform: none;
+  }
+}
+
+.hero-rise {
+  animation: hero-rise 0.8s cubic-bezier(0.21, 0.6, 0.35, 1) both;
+  animation-delay: calc(var(--i, 0) * 90ms + 120ms);
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
   }
   .marquee-track,
-  .kenburns {
+  .kenburns,
+  .hero-rise {
     animation: none;
   }
 }

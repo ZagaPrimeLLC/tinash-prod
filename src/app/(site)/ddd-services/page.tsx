@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { ArrowRight, CheckCircle2, ClipboardList, UserCheck, Wallet } from "lucide-react";
 import PageHero from "@/components/PageHero";
@@ -8,12 +9,11 @@ import CTABanner from "@/components/site/CTABanner";
 import { serviceLines, servicesByLine } from "@/lib/services";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
-  title: "NJ DDD Services — Individual Supports, Community-Based Supports & Respite",
+export const metadata: Metadata = pageMetadata("/ddd-services", {
+  title: "DDD Services in New Jersey",
   description:
     "Tinash is a NJ DDD provider of Individual Supports, Community-Based Supports, and respite for adults with intellectual and developmental disabilities. Paid from the DDD budget — ask your support coordinator.",
-  alternates: { canonical: "/ddd-services" },
-};
+});
 
 const line = serviceLines.ddd;
 

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata("/legal/hipaa-notice", {
   title: "HIPAA Notice of Privacy Practices",
-};
+  description:
+    "How Tinash Homecare Services may use and disclose your protected health information under HIPAA, and your rights to access and control it.",
+});
 
 export default function HipaaNotice() {
   return (

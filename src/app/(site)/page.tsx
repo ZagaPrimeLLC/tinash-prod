@@ -12,6 +12,14 @@ import InquiryForm from "@/components/InquiryForm";
 import Reveal from "@/components/Reveal";
 import { site } from "@/lib/site";
 import { ArrowRight, Sparkles } from "lucide-react";
+import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata: Metadata = pageMetadata("/", {
+  title: { absolute: `${site.name} — In-Home Care & DDD Services in New Jersey` },
+  description:
+    "Licensed in-home care across New Jersey: skilled nursing, companion care, live-in & 24/7 care, respite, and NJ DDD services. Get a free care assessment today.",
+});
 
 export default function Home() {
   return (

@@ -1,14 +1,15 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import PageHero from "@/components/PageHero";
 import Reveal from "@/components/Reveal";
 import InquiryForm from "@/components/InquiryForm";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata("/consulting", {
   title: "Homecare Agency Consulting",
   description:
     "Launch your own homecare agency with guidance from operators who've done it — entity setup, licensing, policies, staffing, and systems.",
-};
+});
 
 const steps = [
   {

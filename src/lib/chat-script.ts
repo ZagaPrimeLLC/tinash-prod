@@ -214,13 +214,13 @@ export const CHAT: Record<string, ChatNode> = {
     id: 'guide-eligibility',
     say: [
       'Your loved one may be eligible for GUIDE if all three apply: they have traditional Medicare (Original Medicare, not a Medicare Advantage plan); they have a dementia diagnosis; and they are not currently enrolled in hospice.',
-      `Not sure? Call ${site.guidePhone} and we will help you check eligibility. Please do not share diagnosis details in this chat.`,
+      `Not sure? Call ${site.phone} and we will help you check eligibility. Please do not share diagnosis details in this chat.`,
     ],
     options: [
       { id: 'call-me', label: 'Have someone call me', next: 'lead' },
       { id: 'other', label: 'Ask about something else', next: 'start' },
     ],
-    link: { href: site.guidePhoneHref, label: `Call ${site.guidePhone}` },
+    link: { href: site.phoneHref, label: `Call ${site.phone}` },
   },
 
   booking: {

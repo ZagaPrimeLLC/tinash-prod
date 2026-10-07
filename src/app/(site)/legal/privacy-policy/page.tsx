@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Privacy Policy" };
+export const metadata: Metadata = pageMetadata("/legal/privacy-policy", {
+  title: "Privacy Policy",
+  description:
+    "How Tinash Homecare Services collects, uses, and protects the personal information you share through our website, forms, and chat.",
+});
 
 export default function PrivacyPolicy() {
   return (

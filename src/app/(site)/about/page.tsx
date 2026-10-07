@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import PageHero from "@/components/PageHero";
 import Reveal from "@/components/Reveal";
 import CTABanner from "@/components/site/CTABanner";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata("/about", {
   title: "About Us",
   description:
     "Tinash Homecare Services is a New Jersey in-home care agency delivering dignity-first companion, live-in, respite, and DDD care.",
-};
+});
 
 const values = [
   {

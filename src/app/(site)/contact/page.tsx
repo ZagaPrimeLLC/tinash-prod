@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import PageHero from "@/components/PageHero";
 import Reveal from "@/components/Reveal";
 import ContactForm from "@/components/site/ContactForm";
@@ -6,11 +7,11 @@ import BookingFlow from "@/components/site/BookingFlow";
 import { site } from "@/lib/site";
 import { Phone, Mail, Clock, MapPin } from "lucide-react";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata("/contact", {
   title: "Contact Us — Free Care Assessment",
   description:
     "Call Tinash Homecare Services or request a free in-home care assessment anywhere in our New Jersey service area.",
-};
+});
 
 export default function ContactPage() {
   return (

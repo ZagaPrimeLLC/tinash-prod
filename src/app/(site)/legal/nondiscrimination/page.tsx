@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Nondiscrimination Notice" };
+export const metadata: Metadata = pageMetadata("/legal/nondiscrimination", {
+  title: "Nondiscrimination Notice",
+  description:
+    "Tinash Homecare Services complies with Federal civil rights laws and offers free language assistance and auxiliary aids. How to file a grievance.",
+});
 
 export default function Nondiscrimination() {
   return (

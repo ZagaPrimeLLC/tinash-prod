@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { ArrowRight, HeartPulse } from "lucide-react";
 import PageHero from "@/components/PageHero";
@@ -7,11 +8,11 @@ import ServiceCards from "@/components/ServiceCards";
 import CTABanner from "@/components/site/CTABanner";
 import { serviceLines, servicesByLine, type ServiceLine } from "@/lib/services";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata("/services", {
   title: "Home Care & NJ DDD Services",
   description:
     "Two service lines: home care (skilled nursing, daily senior care, companion, live-in and respite care) and NJ DDD services (Individual Supports, Community-Based Supports, DDD respite) — plus the Medicare GUIDE dementia program.",
-};
+});
 
 function LineSection({ line, tinted }: { line: ServiceLine; tinted?: boolean }) {
   const l = serviceLines[line];

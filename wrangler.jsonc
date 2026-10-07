@@ -21,6 +21,10 @@
   "env": {
     "staging": {
       "name": "tinash-staging",
+      // Never inherit the production custom domains: deploying staging would
+      // move them onto this worker. Staging lives on workers.dev only.
+      "routes": [],
+      "workers_dev": true,
       "main": ".open-next/worker.js",
       "compatibility_date": "2026-10-01",
       "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],

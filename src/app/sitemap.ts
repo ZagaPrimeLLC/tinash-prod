@@ -5,6 +5,10 @@ import { getOpenJobs } from "@/lib/public-jobs";
 
 export const dynamic = "force-dynamic";
 
+// Last real content change for the static and service pages. Bump this when
+// their copy changes (a fake "now" on every URL teaches crawlers to ignore it).
+const SITE_UPDATED = new Date("2026-10-06");
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages = [
     "",
@@ -22,14 +26,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     "/legal/accessibility",
   ].map((p) => ({
     url: `${site.url}${p}`,
-    lastModified: new Date(),
-    changeFrequency: "monthly" as const,
-    priority: p === "" ? 1 : 0.7,
+    lastModified: SITE_UPDATED,
+    changeFrequency: p.startsWith("/legal/") ? ("yearly" as const) : ("monthly" as const),
+    priority: p === "" ? 1 : p.startsWith("/legal/") ? 0.3 : 0.7,
   }));
 
   const servicePages = services.map((s) => ({
     url: `${site.url}/services/${s.slug}`,
-    lastModified: new Date(),
+    lastModified: SITE_UPDATED,
     changeFrequency: "monthly" as const,
     priority: 0.8,
   }));

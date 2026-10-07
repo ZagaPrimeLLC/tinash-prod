@@ -9,6 +9,7 @@ import { JobDescription } from '@/lib/job-format';
 import { getOpenJob } from '@/lib/public-jobs';
 import { EMPLOYMENT_LABEL, WORK_MODE_LABEL, payLabel, postedLabel, type Job } from '@/lib/jobs';
 import { site } from '@/lib/site';
+import { breadcrumbLd, ldJson, pageMetadata } from '@/lib/seo';
 
 // What every Tinash caregiver can expect (from the careers page copy).
 const whatToExpect = [
@@ -27,12 +28,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!job) return { title: 'Position closed', robots: { index: false } };
   const description =
     job.summary ?? `${job.title} with ${site.name}${job.location ? ` in ${job.location}` : ''}. Apply online in a couple of minutes.`;
-  return {
+  return pageMetadata(`/careers/${job.slug}`, {
     title: `${job.title}${job.location ? ` · ${job.location}` : ''}`,
     description,
-    alternates: { canonical: `/careers/${job.slug}` },
-    openGraph: { title: job.title, description, type: 'website', url: `/careers/${job.slug}` },
-  };
+  });
 }
 
 const EMPLOYMENT_SCHEMA: Record<Job['employment_type'], string> = {
@@ -40,16 +39,24 @@ const EMPLOYMENT_SCHEMA: Record<Job['employment_type'], string> = {
 };
 const UNIT: Record<Job['pay_interval'], string> = { hour: 'HOUR', week: 'WEEK', year: 'YEAR' };
 
+// ZIP codes for towns we post in, when the location text has none.
+const TOWN_ZIP: Record<string, string> = { matawan: '07747' };
+// Jobs have no closing-date field, so tell Google a post is valid this long.
+const VALID_DAYS = 60;
+
 /** Google for Jobs reads this. Location is free text, so pull out what we can. */
 function jobPostingLd(job: Job) {
   const m = job.location?.match(/^(.*?),?\s*(NJ|New Jersey)\b\s*(\d{5})?/i);
   const town = (m?.[1] || job.location || '').replace(/^.*-\s*/, '').trim();
+  const datePosted = job.posted_at ?? job.created_at;
+  const validThrough = new Date(new Date(datePosted).getTime() + VALID_DAYS * 864e5).toISOString();
   const ld: Record<string, unknown> = {
     '@context': 'https://schema.org',
     '@type': 'JobPosting',
     title: job.title,
     description: (job.description ?? job.summary ?? job.title).replace(/\*\*/g, '').replace(/^#+\s*/gm, ''),
-    datePosted: job.posted_at ?? job.created_at,
+    datePosted,
+    validThrough,
     employmentType: EMPLOYMENT_SCHEMA[job.employment_type],
     directApply: true,
     identifier: job.requisition_id ? { '@type': 'PropertyValue', name: site.legalName, value: job.requisition_id } : undefined,
@@ -60,7 +67,7 @@ function jobPostingLd(job: Job) {
         '@type': 'PostalAddress',
         addressLocality: town || undefined,
         addressRegion: 'NJ',
-        postalCode: m?.[3],
+        postalCode: m?.[3] ?? TOWN_ZIP[town.toLowerCase()],
         addressCountry: 'US',
       },
     },
@@ -79,8 +86,8 @@ function jobPostingLd(job: Job) {
       },
     };
   }
-  // "<" escaped so text typed into a job post can never close this script tag.
-  return JSON.stringify(ld).replace(/</g, '\\u003c');
+  // "<" escaped (ldJson) so text typed into a job post can never close this script tag.
+  return ldJson([ld, breadcrumbLd([['Careers', '/careers'], [job.title, `/careers/${job.slug}`]])]);
 }
 
 export default async function JobPage({ params }: { params: Promise<{ slug: string }> }) {

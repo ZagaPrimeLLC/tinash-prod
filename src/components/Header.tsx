@@ -86,22 +86,26 @@ export default function Header() {
           onClick={() => setOpen(false)}
           aria-label={`${site.name} — home`}
         >
+          {/* Pre-sized WebP served as-is: /_next/image is a passthrough on
+              Cloudflare, so the 800px PNGs would ship at full weight. */}
           <Image
-            src="/brand/logo.png"
+            src="/brand/logo.webp"
             alt={site.name}
             fill
             priority
+            unoptimized
             sizes="160px"
             className={`object-contain transition-opacity duration-300 ${
               light ? "opacity-100" : "opacity-0"
             }`}
           />
           <Image
-            src="/brand/logo-white.png"
+            src="/brand/logo-white.webp"
             alt=""
             aria-hidden
             fill
             priority
+            unoptimized
             sizes="160px"
             className={`object-contain drop-shadow-[0_1px_10px_rgba(28,15,54,0.6)] transition-opacity duration-300 ${
               light ? "opacity-0" : "opacity-100"

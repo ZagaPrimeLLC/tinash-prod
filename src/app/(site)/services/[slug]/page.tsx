@@ -3,10 +3,16 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { CheckCircle2 } from "lucide-react";
-import { services, getService, serviceLines } from "@/lib/services";
+import { services, getService, serviceLines, type Service } from "@/lib/services";
 import PageHero from "@/components/PageHero";
 import Reveal from "@/components/Reveal";
 import InquiryForm from "@/components/InquiryForm";
+import { breadcrumbLd, ldIds, ldJson, pageMetadata } from "@/lib/seo";
+import { site } from "@/lib/site";
+
+/** Primary search phrase for a service, e.g. "DDD Individual Supports in New Jersey". */
+const keyword = (s: Service) =>
+  `${s.line === "ddd" && !s.name.startsWith("DDD") ? "DDD " : ""}${s.name} in New Jersey`;
 
 export function generateStaticParams() {
   return services.map((s) => ({ slug: s.slug }));
@@ -19,10 +25,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const s = getService((await params).slug);
   if (!s) return {};
-  return {
-    title: `${s.name} in New Jersey`,
-    description: s.short,
-  };
+  return pageMetadata(`/services/${s.slug}`, { title: keyword(s), description: s.short });
 }
 
 export default async function ServicePage({
@@ -33,10 +36,36 @@ export default async function ServicePage({
   const s = getService((await params).slug);
   if (!s) notFound();
 
+  const line = serviceLines[s.line];
+  const path = `/services/${s.slug}`;
+  const ld = [
+    breadcrumbLd([
+      s.line === "ddd" ? ["DDD Services", "/ddd-services"] : ["Services", "/services"],
+      [s.name, path],
+    ]),
+    {
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: s.name,
+      serviceType: s.name,
+      category: line.label,
+      description: s.short,
+      url: `${site.url}${path}`,
+      image: `${site.url}${s.image}`,
+      provider: { "@id": ldIds.business },
+      areaServed: site.serviceArea.map((county) => ({
+        "@type": "AdministrativeArea",
+        name: `${county}, NJ`,
+      })),
+    },
+  ];
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: ldJson(ld) }} />
       <PageHero
-        kicker={`${serviceLines[s.line].label} · ${s.name}`}
+        kicker={keyword(s)}
+        kickerAsH1
         title={s.hero}
         sub={s.short}
         image={s.image}

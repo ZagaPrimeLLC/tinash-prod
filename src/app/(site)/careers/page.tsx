@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import { CheckCircle2, Phone } from "lucide-react";
 import PageHero from "@/components/PageHero";
@@ -8,12 +9,11 @@ import JobListings, { type PublicJob } from "@/components/site/JobListings";
 import { getOpenJobs } from "@/lib/public-jobs";
 import { site } from "@/lib/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata("/careers", {
   title: "Caregiver Jobs in New Jersey",
   description:
     "Join Tinash Homecare Services — flexible schedules, real training, and clients matched to you. See open caregiver positions and apply in two minutes.",
-  alternates: { canonical: "/careers" },
-};
+});
 
 // Publishing or closing a job in the CRM refreshes this page straight away;
 // this is only the fallback.

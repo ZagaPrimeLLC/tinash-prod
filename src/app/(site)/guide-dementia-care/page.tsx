@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { pageMetadata } from "@/lib/seo";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -20,12 +21,11 @@ import { site } from "@/lib/site";
 // participant) — never describe Tinash as a GUIDE participant itself.
 // Before publishing, PocketRN's partner manager should review this page.
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMetadata("/guide-dementia-care", {
   title: { absolute: "GUIDE Medicare Dementia Care Program in NJ | Tinash Home Care" },
   description:
     "Tinash Home Care is a CMS-approved GUIDE partner with PocketRN. Medicare-covered dementia support in NJ: 24/7 nurse access, caregiver training, and in-home respite.",
-  alternates: { canonical: "/guide-dementia-care" },
-};
+});
 
 const benefits = [
   {
@@ -244,10 +244,10 @@ export default function GuidePage() {
             </p>
             <div className="mt-8 flex flex-wrap gap-4">
               <a
-                href={site.guidePhoneHref}
+                href={site.phoneHref}
                 className="inline-flex items-center gap-2 rounded-full bg-teal-500 px-7 py-3.5 font-semibold text-plum-950 shadow-xl transition-transform hover:scale-105"
               >
-                <Phone className="h-5 w-5" aria-hidden /> Call {site.guidePhone}
+                <Phone className="h-5 w-5" aria-hidden /> Call {site.phone}
               </a>
               <Link
                 href="#guide-inquiry"
