@@ -24,6 +24,8 @@ from loguru import logger
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
 from pipecat.frames.frames import (
+    CancelFrame,
+    EndFrame,
     EndWorkerFrame,
     Frame,
     LLMContextFrame,
@@ -107,6 +109,9 @@ class ClaudeBrain(FrameProcessor):
     async def process_frame(self, frame: Frame, direction: FrameDirection):
         await super().process_frame(frame, direction)
         ctl = self._ctl
+        if isinstance(frame, (EndFrame, CancelFrame)) and self._current and not self._current.done():
+            # The call is over: stop any reply still being written.
+            await self.cancel_task(self._current)
         if (
             ctl.mode == "claude"
             and isinstance(frame, LLMContextFrame)
