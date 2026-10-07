@@ -527,6 +527,9 @@ def make_tts():
             settings=kokoro_tts.KokoroTTSService.Settings(
                 voice=settings.kokoro_voice, speed=settings.kokoro_speed
             ),
+            # Pipecat abandons a line after 3 s without audio; Kokoro can need
+            # longer for the first chunk of a long sentence on slower CPUs.
+            stop_frame_timeout_s=8.0,
         )
 
     from pipecat.services.piper.tts import PiperTTSService

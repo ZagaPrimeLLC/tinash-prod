@@ -13,6 +13,15 @@ GREETING = (
     "How can I help today?"
 )
 
+def speakable_parts(text: str) -> list[str]:
+    """Split a fixed line into sentences so the voice starts quickly: Kokoro
+    takes seconds on a long paragraph, and Pipecat drops a line that produces
+    no audio within its timeout."""
+    import re
+
+    return [p for p in re.split(r"(?<=[.!?])\s+", text.strip()) if p]
+
+
 FAREWELL = "Thanks so much for calling Tinash Homecare Services. Take care, goodbye."
 
 EMERGENCY_NOTE = (

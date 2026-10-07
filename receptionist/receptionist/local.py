@@ -59,7 +59,7 @@ async def run_audio():
     from pipecat.workers.runner import WorkerRunner
 
     from .bot import build_conversation, finish_call, make_stt, make_tts, voice_pipeline_processors
-    from .prompts import GREETING
+    from .prompts import GREETING, speakable_parts
     from .session import CallSession
 
     from .bot import warm_up_llm
@@ -87,7 +87,9 @@ async def run_audio():
     )
     runner = WorkerRunner(handle_sigint=True)
     await runner.add_workers(worker)
-    await worker.queue_frames([TTSSpeakFrame(GREETING, append_to_context=False)])
+    await worker.queue_frames(
+        [TTSSpeakFrame(part, append_to_context=False) for part in speakable_parts(GREETING)]
+    )
     print("\nSpeak into the microphone. Press Ctrl-C to hang up. (Use headphones to avoid echo.)\n")
     await runner.run()
     print("\nCall ended. Working out the intake...")

@@ -45,7 +45,7 @@ from .bot import (
     voice_pipeline_processors,
     warm_up_llm,
 )
-from .prompts import GREETING
+from .prompts import GREETING, speakable_parts
 from .session import CallSession, purge_old_transcripts
 from .settings import settings
 
@@ -125,16 +125,24 @@ async def texml_webhook(token: str, request: Request):
     )
 
 
+@app.post("/twiml")
 @app.post("/twiml/{token}")
-async def twiml_webhook(token: str, request: Request):
+async def twiml_webhook(request: Request, token: str = ""):
     """Twilio's version of the webhook. Twilio sends the caller in the form body
-    and passes it on to the media stream as a custom parameter."""
-    if not _token_ok(token):
+    and passes it on to the media stream as a custom parameter.
+
+    Without the token in the URL, the request must come from our Twilio account
+    (AccountSid). The media stream URL we hand back still carries the token."""
+    form = await request.form()
+    if token:
+        if not _token_ok(token):
+            return Response(status_code=404)
+    elif not (settings.twilio_account_sid and form.get("AccountSid") == settings.twilio_account_sid):
         return Response(status_code=404)
+    token = settings.call_token
     if state["active_calls"] >= settings.max_concurrent_calls:
         logger.warning("Call arrived while busy; playing the busy message")
         return texml(f"  <Say>{escape(BUSY_MESSAGE)}</Say>\n  <Hangup/>")
-    form = await request.form()
     caller = str(form.get("From", ""))
     stream_url = f"{settings.public_ws_url.rstrip('/')}/{token}"
     return texml(
@@ -262,7 +270,9 @@ async def run_call(websocket: WebSocket, call_data, session: CallSession, transp
 
     @transport.event_handler("on_client_connected")
     async def on_connected(transport, client):
-        await worker.queue_frames([TTSSpeakFrame(GREETING, append_to_context=False)])
+        await worker.queue_frames(
+            [TTSSpeakFrame(part, append_to_context=False) for part in speakable_parts(GREETING)]
+        )
 
     @transport.event_handler("on_client_disconnected")
     async def on_disconnected(transport, client):
