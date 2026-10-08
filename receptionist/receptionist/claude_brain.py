@@ -305,7 +305,7 @@ class ClaudeConversation:
 
 
 EXTRACT_INSTRUCTIONS = """Fill in the phone message form from this call between a CALLER and the \
-Tinash Homecare Services virtual ASSISTANT. Use only what the caller said or confirmed; use "" for \
+Tinash Homecare Services phone ASSISTANT. Use only what the caller said or confirmed; use "" for \
 anything not mentioned. callback_number: digits only. relationship: how the person needing care is \
 related to the caller (e.g. mother, son, self). service_needed: a short label such as \
 "Daily Senior Care", "Companion Care", "Skilled Nursing", "Live-In & 24/7 Care", "Respite Care", \

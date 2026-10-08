@@ -41,7 +41,7 @@ INTAKE_SCHEMA = {
 }
 
 EXTRACT_PROMPT = """You fill in a phone message form from a call transcript between a CALLER and \
-the Tinash Homecare Services virtual ASSISTANT.
+the Tinash Homecare Services phone ASSISTANT.
 
 Strict rules:
 - Use only facts the CALLER stated or clearly confirmed (saying "yes" to the assistant reading \

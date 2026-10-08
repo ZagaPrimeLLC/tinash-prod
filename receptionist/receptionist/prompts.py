@@ -8,9 +8,8 @@
 from .settings import settings
 
 GREETING = (
-    "Hi, thanks for calling Tinash Homecare Services! I'm the Tinash virtual "
-    "assistant, and I'll take a few notes so our team can follow up with you. "
-    "How can I help today?"
+    "Hi, thanks for calling Tinash Homecare Services! I'll take a few notes so "
+    "our team can follow up with you. How can I help today?"
 )
 
 def speakable_parts(text: str) -> list[str]:

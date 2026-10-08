@@ -13,9 +13,9 @@ carries on with a local fallback on the Pi.
    off, after hours) is forwarded by T-Mobile to a Telnyx phone number.
 2. Telnyx sends the call audio over the internet to the Pi, through a free
    Cloudflare Tunnel.
-3. The assistant greets the caller: *"Thank you for calling Tinash Homecare
-   Services. This is the Tinash virtual assistant. Calls may be noted so our
-   team can follow up. How can I help?"*
+3. The assistant greets the caller: *"Hi, thanks for calling Tinash Homecare
+   Services! I'll take a few notes so our team can follow up with you. How can
+   I help today?"*
 4. It takes a message one question at a time:
    - **Families:** name, callback number (read back digit by digit), who needs
      care and how they are related, the kind of help, town and county, how
@@ -27,7 +27,8 @@ carries on with a local fallback on the Pi.
    assessment and the GUIDE dementia program. It never quotes prices, never
    promises a start date and never decides whether someone qualifies.
    If a caller describes an emergency it tells them to hang up and call 911.
-   If asked, it says it is a virtual assistant and a person will call back.
+   It doesn't say it is automated unless the caller asks directly; then it
+   answers honestly and says a person will call back.
 6. It ends with "Someone from our team will call you back at ..." and hangs up.
 7. The message goes into the CRM through the website's existing contact
    endpoint (the same place website inquiries go, marked
@@ -261,8 +262,10 @@ CALL_TOKEN=<token from .env> .venv/bin/python scripts/fake_telnyx_call.py
 
 ## Step 6: privacy and compliance notes
 
-- **AI disclosure:** the greeting says it is a virtual assistant and that
-  calls may be noted. It answers honestly if asked whether it is a robot.
+- **AI disclosure:** the greeting says notes are taken but does not say the
+  assistant is automated (owner's choice). It answers honestly if a caller asks
+  whether they are talking to a real person. Check current New Jersey and
+  federal rules on automated voice systems before relying on this.
 - **Recording:** no audio is recorded or stored. Only the text transcript is
   kept, on the Pi, for 30 days, then deleted automatically
   (`TRANSCRIPT_RETENTION_DAYS`). The message sent to the CRM contains the
