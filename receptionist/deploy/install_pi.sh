@@ -48,8 +48,13 @@ else
   echo "== 4/7 (no local model)"
 fi
 
-echo "== 5/7 Speech models (Whisper base.en + small.en, Piper voice)"
+echo "== 5/7 Speech models (Whisper base.en + small.en, Piper voice, Kokoro voice)"
 .venv/bin/python scripts/download_models.py
+mkdir -p models/kokoro
+for f in kokoro-v1.0.onnx voices-v1.0.bin; do
+  [ -f "models/kokoro/$f" ] || curl -fL -o "models/kokoro/$f" \
+    "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/$f"
+done
 
 echo "== 6/7 Settings (.env)"
 if [ ! -f .env ]; then
