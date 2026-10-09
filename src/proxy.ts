@@ -12,7 +12,7 @@ const PUBLIC_ORIGIN = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://tinashhomecar
 
 const CRM_PREFIXES = ['/dashboard', '/login', '/auth', '/welcome', '/design-preview', '/api/board-search', '/api/intake'];
 // Assets and endpoints the CRM pages themselves need on the CRM host.
-const CRM_HOST_ALLOWED = ['/_next', '/brand', '/media', '/icon', '/apple-icon', '/favicon', '/api/inquiry'];
+const CRM_HOST_ALLOWED = ['/_next', '/brand', '/media', '/icon', '/apple-icon', '/favicon', '/api/inquiry', '/phone-voices'];
 
 // "/icon" matches "/icon.png", "/dashboard" matches "/dashboard/jobs", but
 // "/dashboard" does not match "/dashboardx".

@@ -212,12 +212,9 @@ _LABELS = [
 ]
 
 
-def build_inquiry_payload(session: CallSession, intake: dict) -> dict:
-    """Shape matches src/app/api/inquiry/route.ts (name, phone, email, kind, message, source_page)."""
+def call_summary(session: CallSession, intake: dict) -> str:
+    """The readable summary the office sees: kind of call, emergency note, then each detail taken."""
     is_job = intake.get("caller_type") == "job_seeker"
-    phone = intake.get("callback_number") or intake.get("caller_id") or ""
-    name = intake.get("caller_name") or "Unknown caller (phone assistant)"
-
     when = time.strftime("%a %b %d %Y, %I:%M %p", time.localtime(session.started_at))
     lines = [
         f"Phone assistant call ({'job seeker' if is_job else 'care inquiry'}), {when}.",
@@ -228,10 +225,18 @@ def build_inquiry_payload(session: CallSession, intake: dict) -> dict:
         val = str(intake.get(key) or "").strip()
         if val and not (is_job and key in ("care_recipient", "relationship", "service_needed", "payment_type", "urgency")):
             lines.append(f"{label}: {val}")
-    lines.append("")
-    lines.append("Transcript excerpt (full transcript kept on the receptionist device for 30 days):")
+    return "\n".join(lines)
+
+
+def build_inquiry_payload(session: CallSession, intake: dict) -> dict:
+    """Shape matches src/app/api/inquiry/route.ts (name, phone, email, kind, message, source_page)."""
+    is_job = intake.get("caller_type") == "job_seeker"
+    phone = intake.get("callback_number") or intake.get("caller_id") or ""
+    name = intake.get("caller_name") or "Unknown caller (phone assistant)"
+
+    summary = call_summary(session, intake) + "\n\n"
+    summary += "Transcript excerpt (full transcript kept on the receptionist device for 30 days):"
     excerpt = session.transcript_text(last=12)
-    summary = "\n".join(lines)
     budget = 3900 - len(summary)  # the route keeps the first 4000 characters
     if len(excerpt) > budget:
         excerpt = "..." + excerpt[-max(budget - 3, 0):]

@@ -30,6 +30,8 @@ class CallSession:
     mode: str  # "phone", "local-audio", "text"
     caller_id: str = ""
     call_id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
+    carrier: str = ""  # "telnyx" or "twilio" for phone calls
+    carrier_call_id: str = ""  # the carrier's id for the call (shown in the CRM)
     started_at: float = field(default_factory=time.time)
     ended_at: float | None = None
     transcript: list[dict] = field(default_factory=list)
@@ -67,6 +69,7 @@ def save_call(session: CallSession, intake: dict, payload: dict | None, post_res
     record = {
         "call_id": session.call_id,
         "mode": session.mode,
+        "carrier": session.carrier,
         "caller_id": session.caller_id,
         "started_at": started.isoformat(),
         "duration_secs": round((session.ended_at or time.time()) - session.started_at, 1),

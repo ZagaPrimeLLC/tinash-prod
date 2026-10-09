@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, KanbanSquare, UserCheck, Inbox, Users,
   GraduationCap, Route, History, CircleUser, Settings, Contact2, Briefcase, FileUp, UserCog, HeartHandshake,
+  PhoneCall,
 } from 'lucide-react';
 
 /**
@@ -44,6 +45,8 @@ export const NAV: NavSection[] = [
       { href: '/dashboard/inbox',       label: 'Inbox',      icon: Inbox,     roles: ALL,
         hint: 'from the website' },
       { href: '/dashboard/contacts',    label: 'Contacts',   icon: Contact2,  roles: ALL },
+      { href: '/dashboard/phone',       label: 'Phone Assistant', icon: PhoneCall, roles: ALL,
+        hint: 'calls to the office line' },
     ],
   },
   {

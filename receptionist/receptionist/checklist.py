@@ -132,6 +132,7 @@ class Checklist:
     minimal: bool = False        # no language model available: only name + number
     last_question: str = ""      # the question the assistant just asked
     previous_question: str = ""  # the one before this caller turn (context for the LLM)
+    farewell: str = "Thanks so much for calling Tinash Homecare Services. Take care, goodbye."  # set from the CRM
 
     # ---- reading the caller's sentence -----------------------------------
     def _capture(self, t: str) -> str:
@@ -356,7 +357,7 @@ class Checklist:
             parts.append("Someone from our team will call you back at the number you are calling from.")
         else:
             parts.append("Someone from our team will call you back.")
-        parts.append("Thanks so much for calling Tinash Homecare Services. Take care, goodbye.")
+        parts.append(self.farewell)
         return " ".join(parts)
 
     def summary(self) -> dict:

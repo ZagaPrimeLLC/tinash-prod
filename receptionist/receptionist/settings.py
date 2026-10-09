@@ -66,6 +66,14 @@ class Settings:
     )
     dry_run: bool = _bool("DRY_RUN", True)
 
+    # CRM dashboard (Phone Assistant in the Tinash CRM). All three set = on:
+    # settings come from the CRM, calls are logged there, and the CRM's test
+    # mode replaces DRY_RUN. Any of them empty = off (the behaviour above).
+    supabase_url: str = os.getenv("SUPABASE_URL", "").strip().rstrip("/")
+    supabase_anon_key: str = os.getenv("SUPABASE_ANON_KEY", "").strip()  # the public (publishable) key
+    device_token: str = os.getenv("DEVICE_TOKEN", "").strip()
+    supabase_schema: str = os.getenv("SUPABASE_SCHEMA", "proj_tinash").strip() or "proj_tinash"
+
     # Telephony (Telnyx)
     public_ws_url: str = os.getenv("PUBLIC_WS_URL", "wss://voice.tinashhomecareservices.com/ws")
     telnyx_api_key: str = os.getenv("TELNYX_API_KEY", "")
@@ -85,3 +93,8 @@ settings = Settings()
 def claude_enabled() -> bool:
     """Claude is used when selected and an API key is configured (the key is never logged)."""
     return settings.llm_provider == "claude" and bool(os.getenv("ANTHROPIC_API_KEY"))
+
+
+def dashboard_enabled() -> bool:
+    """The CRM dashboard integration is on when its URL, public key and device token are all set."""
+    return bool(settings.supabase_url and settings.supabase_anon_key and settings.device_token)

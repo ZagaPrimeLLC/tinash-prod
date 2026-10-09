@@ -69,6 +69,15 @@ class CallControl:
     claude: object = None  # claude_brain.ClaudeConversation while mode == "claude"
     bridge: str = ""  # said once when switching from Claude to the fallback
     on_response: Callable[[str, float, float, bool], None] | None = None  # text-mode hook
+    config: object = None  # dashboard.CallConfig for this call (greeting, farewell, voice, ...)
+
+    @property
+    def greeting(self) -> str:
+        return getattr(self.config, "greeting", None) or GREETING
+
+    @property
+    def farewell(self) -> str:
+        return getattr(self.config, "farewell", None) or FAREWELL
 
     async def end(self, push: Callable, reason: str, farewell: str | None = None):
         """Say the closing words and end the call gracefully (queued audio finishes first)."""
@@ -194,7 +203,7 @@ class ClaudeBrain(FrameProcessor):
         if "call you back" not in said and d:
             extra.append(f"Someone from our team will call you back at {spaced(d)}.")
         if "bye" not in said:
-            extra.append(FAREWELL)
+            extra.append(self._ctl.farewell)
         if not extra:
             return None
         text = " ".join(extra)
@@ -333,7 +342,7 @@ class Planner(FrameProcessor):
             earlier = ctl.checklist.previous_question
             question_ctx = LLMContext(
                 messages=[
-                    {"role": "assistant", "content": GREETING},
+                    {"role": "assistant", "content": ctl.greeting},
                     {
                         "role": "user",
                         "content": (f'(Earlier the assistant asked: "{earlier}")\n' if earlier else "")
@@ -418,12 +427,13 @@ class ResponseTap(FrameProcessor):
 # ---------------------------------------------------------------------------
 
 
-def make_llm() -> OLLamaLLMService:
+def make_llm(config=None) -> OLLamaLLMService:
+    prompt = system_prompt() if config is None else system_prompt(config.greeting, config.extra_facts)
     return OLLamaLLMService(
         base_url=settings.ollama_base_url,
         settings=OLLamaLLMService.Settings(
             model=settings.llm_model,
-            system_instruction=system_prompt(),
+            system_instruction=prompt,
             temperature=settings.llm_temperature,
             max_tokens=settings.llm_max_tokens,
         ),
@@ -525,14 +535,20 @@ def _kokoro_model():
     return _kokoro_instance
 
 
-def preload_tts() -> None:
-    if settings.tts_engine == "kokoro":
+def preload_tts(engine: str | None = None) -> None:
+    """Load the Kokoro model ahead of the first call that needs it (Piper loads per call)."""
+    if (engine or settings.tts_engine) == "kokoro":
         _kokoro_model()
 
 
-def make_tts():
-    if settings.tts_engine == "kokoro":
+def make_tts(config=None):
+    """The voice for one call: the CRM's choice when the dashboard is on, else TTS_ENGINE from .env."""
+    engine = getattr(config, "voice_engine", None) or settings.tts_engine
+    if engine == "kokoro":
         import pipecat.services.kokoro.tts as kokoro_tts
+
+        voice = getattr(config, "voice", None) or settings.kokoro_voice
+        speed = getattr(config, "voice_speed", None) or settings.kokoro_speed
 
         # Pipecat builds its own Kokoro in __init__ (a 300 MB load per call);
         # hand it the shared one instead.
@@ -540,9 +556,7 @@ def make_tts():
         return kokoro_tts.KokoroTTSService(
             model_path=str(settings.kokoro_dir / "kokoro-v1.0.onnx"),
             voices_path=str(settings.kokoro_dir / "voices-v1.0.bin"),
-            settings=kokoro_tts.KokoroTTSService.Settings(
-                voice=settings.kokoro_voice, speed=settings.kokoro_speed
-            ),
+            settings=kokoro_tts.KokoroTTSService.Settings(voice=voice, speed=speed),
             # Pipecat abandons a line after 3 s without audio; Kokoro can need
             # longer for the first chunk of a long sentence on slower CPUs.
             stop_frame_timeout_s=8.0,
@@ -550,9 +564,11 @@ def make_tts():
 
     from pipecat.services.piper.tts import PiperTTSService
 
+    # Piper has no speed setting here; switching voice loads that voice's model for the call.
+    voice = getattr(config, "voice", None) if getattr(config, "voice_engine", None) == "piper" else None
     return PiperTTSService(
         download_dir=settings.piper_dir,
-        settings=PiperTTSService.Settings(voice=settings.piper_voice),
+        settings=PiperTTSService.Settings(voice=voice or settings.piper_voice),
     )
 
 
@@ -579,19 +595,24 @@ class ConversationParts:
     tap: ResponseTap
 
 
-def build_conversation(session: CallSession, *, text_mode: bool) -> ConversationParts:
-    ctl = CallControl(session=session, text_mode=text_mode)
+def build_conversation(session: CallSession, *, text_mode: bool, config=None) -> ConversationParts:
+    """`config` is the call's dashboard.CallConfig (CRM settings); None means the .env defaults."""
+    from .dashboard import CallConfig
+
+    config = config or CallConfig()
+    ctl = CallControl(session=session, text_mode=text_mode, config=config)
     from .checklist import digits_of
 
     ctl.checklist.caller_id = digits_of(session.caller_id or "")
+    ctl.checklist.farewell = config.farewell
     session.checklist = ctl.checklist
     if claude_enabled():
         from .claude_brain import ClaudeConversation
 
         ctl.mode = "claude"
-        ctl.claude = ClaudeConversation(caller_id=session.caller_id)
+        ctl.claude = ClaudeConversation(caller_id=session.caller_id, config=config)
         session.claude = ctl.claude
-    context = LLMContext(messages=[{"role": "assistant", "content": GREETING}])
+    context = LLMContext(messages=[{"role": "assistant", "content": config.greeting}])
     if text_mode:
         user_params = LLMUserAggregatorParams(user_turn_strategies=ExternalUserTurnStrategies())
     else:
@@ -612,11 +633,11 @@ def build_conversation(session: CallSession, *, text_mode: bool) -> Conversation
         if ctl.idle_prompts == 1:
             await planner.speak(STILL_THERE)
         else:
-            farewell = ctl.checklist.closing_line() if ctl.checklist.phone_digits else FAREWELL
+            farewell = ctl.checklist.closing_line() if ctl.checklist.phone_digits else ctl.farewell
             session.add("assistant", farewell)
             await ctl.end(planner.push_frame, "caller silent", farewell=farewell)
 
-    session.add("assistant", GREETING)
+    session.add("assistant", config.greeting)
     return ConversationParts(
         ctl=ctl,
         context=context,
@@ -624,7 +645,7 @@ def build_conversation(session: CallSession, *, text_mode: bool) -> Conversation
         assistant_aggregator=assistant_agg,
         brain=ClaudeBrain(ctl),
         planner=planner,
-        llm=make_llm(),
+        llm=make_llm(config),
         tap=ResponseTap(ctl),
     )
 
@@ -662,10 +683,18 @@ def _recorded_to_form(rec: dict) -> dict:
     return {k: (v if isinstance(v, str) else "") for k, v in form.items()}
 
 
-async def finish_call(session: CallSession, warm_after: bool = False) -> tuple[dict, dict | None, str]:
-    """After a call: extract the intake, send it to the website (or print it in DRY_RUN), save the transcript locally."""
+async def finish_call(session: CallSession, warm_after: bool = False, config=None) -> tuple[dict, dict | None, str]:
+    """After a call: extract the intake, send it on, save the transcript locally.
+
+    Phone calls with the CRM dashboard on are logged in the CRM, which also creates the
+    inbox lead unless the CRM is in test mode (dashboard.report_call). Otherwise the lead
+    goes to the website's /api/inquiry, or is printed with DRY_RUN on."""
+    from .dashboard import CallConfig, report_call
     from .intake import build_inquiry_payload, extract_intake, send_inquiry
     from .session import purge_old_transcripts, save_call
+    from .settings import dashboard_enabled
+
+    config = config or CallConfig()
 
     session.ended_at = session.ended_at or time.time()
     claude = session.claude
@@ -694,11 +723,14 @@ async def finish_call(session: CallSession, warm_after: bool = False) -> tuple[d
         await claude.close()
     payload = None
     result = "skipped: caller said nothing"
-    if any(m["role"] == "user" for m in session.transcript):
+    if session.mode == "phone" and dashboard_enabled():
+        # Every phone call is logged, including hang-ups, so the CRM can count missed calls.
+        payload, result = await report_call(session, intake, config)
+    elif any(m["role"] == "user" for m in session.transcript):
         payload = build_inquiry_payload(session, intake)
         result = await send_inquiry(payload)
     save_call(session, intake, payload, result)
-    purge_old_transcripts()
+    purge_old_transcripts(config.retention_days)
     if warm_after:
         await warm_up_llm()
     return intake, payload, result
@@ -713,10 +745,14 @@ async def warm_up_llm() -> float:
     """
     import httpx
 
+    from .dashboard import cached_config
+
+    # The prompt the next call will use, so the warm-up fills the right cache.
+    config = cached_config()
     if claude_enabled():
         from .claude_brain import warm_claude
 
-        await warm_claude()
+        await warm_claude(config)
     if not await ollama_available(max_age=0):
         logger.info("Ollama is not running: no local model to warm up"
                     + (" (Claude is the brain; offline fallback is limited)" if claude_enabled() else ""))
@@ -725,8 +761,8 @@ async def warm_up_llm() -> float:
     body = {
         "model": settings.llm_model,
         "messages": [
-            {"role": "system", "content": system_prompt()},
-            {"role": "assistant", "content": GREETING},
+            {"role": "system", "content": system_prompt(config.greeting, config.extra_facts)},
+            {"role": "assistant", "content": config.greeting},
             {"role": "user", "content": "Hello."},
         ],
         "max_tokens": 1,

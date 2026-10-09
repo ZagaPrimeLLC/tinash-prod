@@ -139,8 +139,14 @@ def _client() -> anthropic.AsyncAnthropic:
     )
 
 
-def _system() -> list[dict]:
-    return [{"type": "text", "text": claude_system_prompt(), "cache_control": {"type": "ephemeral", "ttl": "1h"}}]
+def _system(config=None) -> list[dict]:
+    """The cached system prompt. `config` (dashboard.CallConfig) adds the greeting, facts and
+    tone notes set in the CRM; without it the prompt is the one from config/ alone."""
+    if config is None:
+        text = claude_system_prompt()
+    else:
+        text = claude_system_prompt(config.greeting, config.extra_facts, config.custom_instructions)
+    return [{"type": "text", "text": text, "cache_control": {"type": "ephemeral", "ttl": "1h"}}]
 
 
 _SPEECH_JUNK = re.compile(r"[*_#`>|~]")
@@ -167,6 +173,7 @@ class ClaudeConversation:
     ttfts: list = field(default_factory=list)
     pending_tool_results: list = field(default_factory=list)
     slow_turns: int = 0
+    config: object = None  # dashboard.CallConfig for this call, or None for the config/ defaults
     client: anthropic.AsyncAnthropic = field(default_factory=_client)
 
     def __post_init__(self):
@@ -174,14 +181,14 @@ class ClaudeConversation:
         self.messages = [
             {"role": "user", "content": f"(Phone call connected. Caller ID: {self.caller_id or 'unknown'}. "
                                         f"Local time in New Jersey: {now}.)"},
-            {"role": "assistant", "content": GREETING},
+            {"role": "assistant", "content": getattr(self.config, "greeting", None) or GREETING},
         ]
 
     def _request_kwargs(self) -> dict:
         kw = dict(
             model=settings.claude_model,
             max_tokens=settings.claude_max_tokens,
-            system=_system(),
+            system=_system(self.config),
             cache_control={"type": "ephemeral"},  # also cache the growing conversation
             tools=TOOLS,
             # Lowest thinking setting on this model (no extended thinking): fastest first words.
@@ -342,7 +349,7 @@ async def claude_extract(transcript: str, recorded: dict, schema: dict, usage: U
     return json.loads(text)
 
 
-async def warm_claude() -> float:
+async def warm_claude(config=None) -> float:
     """Write (or refresh) the prompt cache for the system prompt + tools.
 
     A cold first turn has to write ~2,500 tokens to the cache and can take 4-7 s;
@@ -350,7 +357,7 @@ async def warm_claude() -> float:
     1-hour lifetime, so the server calls this every 50 minutes (about $0.0006 each).
     Returns seconds taken, or -1 on failure.
     """
-    conv = ClaudeConversation()
+    conv = ClaudeConversation(config=config)
     conv.messages = [{"role": "user", "content": "(Line check before calls. Reply with the single word OK.)"}]
     kw = conv._request_kwargs()
     kw["max_tokens"] = 16

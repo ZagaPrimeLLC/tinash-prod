@@ -32,7 +32,9 @@ carries on with a local fallback on the Pi.
 6. It ends with "Someone from our team will call you back at ..." and hangs up.
 7. The message goes into the CRM through the website's existing contact
    endpoint (the same place website inquiries go, marked
-   **source: phone-assistant**), so the office gets the usual email.
+   **source: phone-assistant**), so the office gets the usual email. With the
+   CRM dashboard on (see "CRM dashboard" below), every call is also logged on
+   the CRM's Phone Assistant page, which creates the lead itself.
 8. The full transcript stays only on the Pi, in `data/transcripts/`, and is
    deleted automatically after 30 days.
 
@@ -260,6 +262,81 @@ prints how long each reply took:
 CALL_TOKEN=<token from .env> .venv/bin/python scripts/fake_telnyx_call.py
 ```
 
+## CRM dashboard (Phone Assistant in the Tinash CRM)
+
+Optional, and recommended once the assistant is on the real line. The CRM's
+**Phone Assistant** page (crm.tinashhomecareservices.com/dashboard/phone)
+then shows every call (outcome, details taken, transcript, cost), which
+calls still need a callback, and whether the Pi is online, and the office can
+change the assistant without touching the Pi:
+
+- turn it **on or off** (off: callers hear a short "please call back during
+  office hours" message and the call ends);
+- **test mode** (on: calls are only logged in the CRM; off: real calls also
+  become inbox leads and the office gets the usual email);
+- the **voice** and speaking speed, the **greeting** and **goodbye**;
+- **tone and extra instructions** and **extra facts**, added to the end of the
+  script. The built-in rules (911, no prices, no medical advice, no promises,
+  only facts from the fact sheet) always come first and win;
+- how long **transcripts** are kept (in the CRM and in `data/transcripts/`).
+
+The Pi reads the settings about every 30 seconds, so a change applies from the
+next call. It also sends a heartbeat every 60 seconds; the CRM shows the device
+as offline after 3 minutes without one.
+
+**Turning it on.** You need three values in `.env`:
+
+```bash
+SUPABASE_URL=https://xqvtmvxcrgnlmvnlkunl.supabase.co
+SUPABASE_ANON_KEY=        # the project's public (publishable/anon) key, the same one the website uses
+DEVICE_TOKEN=             # this Pi's own secret, made below
+```
+
+Make the device token on the Pi and register only its fingerprint (SHA-256)
+in the database. The token itself never leaves the Pi:
+
+```bash
+TOKEN=$(openssl rand -hex 32)
+echo "DEVICE_TOKEN=$TOKEN" >> .env               # then remove any older DEVICE_TOKEN line
+printf %s "$TOKEN" | sha256sum | cut -d' ' -f1  # the fingerprint (on a Mac: shasum -a 256)
+```
+
+Then, in the Supabase SQL editor (project Tinash-Prod), with the fingerprint:
+
+```sql
+insert into proj_tinash.phone_devices (name, token_hash)
+values ('Office Raspberry Pi', '<fingerprint>');
+```
+
+Restart (`sudo systemctl restart tinash-receptionist`). The log says
+`CRM dashboard on`, and within a minute the CRM's Setup tab shows the Pi as
+healthy. To retire a device (lost Pi, leaked token), set its `revoked_at`:
+`update proj_tinash.phone_devices set revoked_at = now() where name = '...';`
+
+**What changes when it is on:**
+
+- The CRM's **test mode replaces `DRY_RUN`** for phone calls. Every call is
+  logged in the CRM (including hang-ups, so missed calls can be counted), and
+  the database creates the inbox lead itself when test mode is off and the
+  caller gave a name and a number. The Pi does not also post to
+  `/api/inquiry`, so there are no duplicates.
+- If the CRM cannot be reached when a call ends, the Pi falls back to the old
+  path and posts the lead to `/api/inquiry`, so nothing is lost. That fallback
+  still respects `DRY_RUN` (and is printed only if the CRM was last seen in
+  test mode), so set `DRY_RUN=false` once the assistant is live.
+- If the CRM cannot be reached when a call starts, the last settings it sent
+  are used (or the `.env` settings, if it has never answered).
+- Outcomes: **emergency** (told to call 911), **failed** (an error),
+  **abandoned** (nothing useful, or under 15 seconds without a number),
+  **completed** (name, number and what they need, or the role for job
+  seekers), otherwise **partial**.
+- A voice chosen in the CRM must be installed on the Pi (`models/kokoro` or
+  `models/piper/<voice>.onnx`); otherwise the `.env` voice is used and the log
+  says so. Speed applies to the Kokoro voices.
+
+Leave any of the three values empty and the assistant behaves exactly as
+described in the steps above.
+
 ## Step 6: privacy and compliance notes
 
 - **AI disclosure:** the greeting says notes are taken but does not say the
@@ -304,5 +381,7 @@ CALL_TOKEN=<token from .env> .venv/bin/python scripts/fake_telnyx_call.py
 | Calls say "I'm having trouble on my end" | Claude unreachable (internet, API key, Anthropic outage). The log shows `Claude unavailable (...)`. The message is still taken. |
 | Telnyx call connects but silence | Tunnel down (`systemctl status cloudflared`), or wrong `PUBLIC_WS_URL`/token in `.env` |
 | Messages not in the CRM | `DRY_RUN` still `true`, or check the log for `Inquiry post` errors (the website limits 5 requests a minute per address) |
+| CRM dashboard shows the Pi offline | The service is stopped, the Pi has no internet, or the log shows `CRM heartbeat failed` (wrong `SUPABASE_URL`/key, or the device token is not registered or was revoked) |
+| Calls in the CRM but not in the inbox | Test mode is still on (CRM > Phone Assistant > Settings), or the caller left no name or number |
 | Assistant mishears names | Use `WHISPER_MODEL=models/whisper/small.en` (slower, more accurate) |
 | Replies too slow | `WHISPER_MODEL=models/whisper/base.en` (speech recognition is the slowest part on a Pi) |

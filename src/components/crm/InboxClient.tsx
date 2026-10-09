@@ -101,7 +101,7 @@ export default function InboxClient({
             ) : (
               <ul className="divide-y divide-slate-100">
                 {shown.map((i) => (
-                  <li key={i.id} className="p-5">
+                  <li key={i.id} id={`inq-${i.id}`} className="scroll-mt-6 p-5 target:bg-teal-50/60">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="flex flex-wrap items-center gap-2 font-semibold text-plum-950">
